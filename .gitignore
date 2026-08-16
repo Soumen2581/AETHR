@@ -1,0 +1,28 @@
+# Build output
+build/
+build-*/
+cmake-build-*/
+out/
+
+# Vendored dependencies (fetched reproducibly by CMake from pinned tags)
+External/JUCE/
+External/Catch2/
+Tools/pluginval/
+Tools/pluginval.app/
+
+# Local tool/IDE state
+.idea/
+.vscode/
+.cache/
+compile_commands.json
+CMakeUserPresets.json
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# Test / profiling artefacts
+Artefacts/
+*.wav
+!Tests/Resources/**/*.wav
+Reports/

@@ -1,0 +1,88 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "STRATA_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "dev",
+      "inherits": "base",
+      "displayName": "Dev (RelWithDebInfo, warnings are errors)",
+      "description": "Day-to-day development build: optimised enough to audition, with debug info and a strict warning policy.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "STRATA_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "base",
+      "displayName": "Debug (assertions enabled)",
+      "description": "Unoptimised build with jassert live, for stepping through DSP and catching invalid coefficients.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "STRATA_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "base",
+      "displayName": "Release (shipping, macOS universal)",
+      "description": "Fully optimised build with link-time optimisation. On macOS this produces an arm64 + x86_64 universal binary.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "STRATA_WARNINGS_AS_ERRORS": "OFF"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "environment": {
+        "CMAKE_OSX_ARCHITECTURES": "arm64;x86_64"
+      }
+    },
+    {
+      "name": "release-native",
+      "inherits": "base",
+      "displayName": "Release (shipping, host architecture only)",
+      "description": "Fully optimised single-architecture build. Use for profiling, where a universal binary only slows the build down.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "STRATA_WARNINGS_AS_ERRORS": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev", "configurePreset": "dev" },
+    { "name": "debug", "configurePreset": "debug" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "release-native", "configurePreset": "release-native" }
+  ],
+  "testPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    }
+  ]
+}
