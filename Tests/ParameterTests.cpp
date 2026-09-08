@@ -210,6 +210,27 @@ TEST_CASE ("Malformed or foreign state is rejected without changing current valu
     REQUIRE (valueAfter == Approx (valueBefore));
 }
 
+TEST_CASE ("Bool parameters snap normalised values so APVTS state round-trips", "[parameters][state][pluginval]")
+{
+    aethr::AethrProcessor processor;
+    auto* sync = processor.getValueTreeState().getParameter (aethr::params::lfo1::sync);
+    REQUIRE (sync != nullptr);
+    REQUIRE (sync->isBoolean());
+
+    // Mimic pluginval: host writes a fractional normalised value onto a bool.
+    sync->setValueNotifyingHost (0.301879f);
+    REQUIRE (sync->getValue() == Catch::Approx (0.0f).margin (1.0e-6f));
+
+    juce::MemoryBlock block;
+    processor.getStateInformation (block);
+
+    sync->setValueNotifyingHost (0.72f);
+    REQUIRE (sync->getValue() == Catch::Approx (1.0f).margin (1.0e-6f));
+
+    processor.setStateInformation (block.getData(), static_cast<int> (block.getSize()));
+    REQUIRE (sync->getValue() == Catch::Approx (0.0f).margin (1.0e-6f));
+}
+
 TEST_CASE ("Factory bank is curated to at least 50 presets", "[parameters][presets]")
 {
     REQUIRE (aethr::presets::numFactoryPresets() >= 50);

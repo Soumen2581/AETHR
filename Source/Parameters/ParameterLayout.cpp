@@ -71,11 +71,67 @@ namespace
     constexpr float percentMax  = 100.0f;
     constexpr float percentStep = 0.1f;
 
+    /**
+        Boolean parameter that snaps normalised host writes to 0 or 1.
+
+        Stock AudioParameterBool::setValue stores intermediate floats (e.g. 0.3).
+        APVTS then serialises only the denormalised bool and can skip restore when
+        that bool is unchanged, leaving getValue() stuck mid-range — which fails
+        pluginval's state-restoration test.
+    */
+    class SnapBoolParameter final : public juce::RangedAudioParameter
+    {
+    public:
+        SnapBoolParameter (const juce::ParameterID& idToUse,
+                           const juce::String& nameToUse,
+                           bool defaultValue,
+                           const juce::AudioParameterBoolAttributes& attributes = {})
+            : RangedAudioParameter (idToUse, nameToUse, attributes.getAudioProcessorParameterWithIDAttributes()),
+              value (defaultValue ? 1.0f : 0.0f),
+              defaultNormalised (defaultValue ? 1.0f : 0.0f)
+        {
+        }
+
+        bool get() const noexcept { return value.load() >= 0.5f; }
+
+        const juce::NormalisableRange<float>& getNormalisableRange() const override { return range; }
+
+    private:
+        float getValue() const override { return value.load(); }
+
+        void setValue (float newValue) override
+        {
+            value.store (newValue >= 0.5f ? 1.0f : 0.0f);
+        }
+
+        float getDefaultValue() const override { return defaultNormalised; }
+        int getNumSteps() const override { return 2; }
+        bool isDiscrete() const override { return true; }
+        bool isBoolean() const override { return true; }
+
+        juce::String getText (float v, int) const override
+        {
+            return v >= 0.5f ? "On" : "Off";
+        }
+
+        float getValueForText (const juce::String& text) const override
+        {
+            const auto lower = text.toLowerCase();
+            if (lower == "on" || lower == "yes" || lower == "true" || lower == "1")
+                return 1.0f;
+            return 0.0f;
+        }
+
+        const juce::NormalisableRange<float> range { 0.0f, 1.0f, 1.0f };
+        std::atomic<float> value { 0.0f };
+        float defaultNormalised { 0.0f };
+    };
+
     std::unique_ptr<juce::AudioParameterFloat> makePercentParameter (const char* identifier,
                                                                     const char* name,
                                                                     float defaultPercent,
                                                                     float minimumPercent = percentMin);
-    std::unique_ptr<juce::AudioParameterBool> makeSync (const char* identifier, const char* name);
+    std::unique_ptr<juce::RangedAudioParameter> makeSync (const char* identifier, const char* name);
     std::unique_ptr<juce::AudioParameterChoice> makeDivision (const char* identifier,
                                                              const char* name,
                                                              int defaultIndex = defaultTimeDivisionIndex);
@@ -386,7 +442,7 @@ namespace
                                                   return withUnit (value, value < 10.0f ? 2 : 1, "ms");
                                               }));
 
-        auto seedLocked = std::make_unique<juce::AudioParameterBool> (
+        auto seedLocked = std::make_unique<SnapBoolParameter> (
             juce::ParameterID { exciter::seedLocked, versionHint },
             "Lock Seed",
             false,
@@ -462,7 +518,7 @@ namespace
 
     std::unique_ptr<juce::AudioProcessorParameterGroup> makeLayerGroup()
     {
-        auto enable = std::make_unique<juce::AudioParameterBool> (
+        auto enable = std::make_unique<SnapBoolParameter> (
             juce::ParameterID { layer::bEnable, versionHint },
             "Layer B",
             false);
@@ -498,9 +554,9 @@ namespace
         return choices;
     }
 
-    std::unique_ptr<juce::AudioParameterBool> makeSync (const char* identifier, const char* name)
+    std::unique_ptr<juce::RangedAudioParameter> makeSync (const char* identifier, const char* name)
     {
-        return std::make_unique<juce::AudioParameterBool> (
+        return std::make_unique<SnapBoolParameter> (
             juce::ParameterID { identifier, versionHint }, name, false);
     }
 
