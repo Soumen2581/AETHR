@@ -147,7 +147,9 @@ juce_add_plugin(Aethr
     AU_MAIN_TYPE                kAudioUnitType_MusicDevice
     COPY_PLUGIN_AFTER_BUILD     ${AETHR_COPY_AFTER_BUILD}
     MICROPHONE_PERMISSION_ENABLED FALSE
-    HARDENED_RUNTIME_ENABLED    TRUE)
+    HARDENED_RUNTIME_ENABLED    TRUE
+    ICON_BIG                    "${CMAKE_CURRENT_SOURCE_DIR}/Assets/icons/aethr-512.png"
+    ICON_SMALL                  "${CMAKE_CURRENT_SOURCE_DIR}/Assets/icons/aethr-128.png")
 
 add_subdirectory(Source)
 
@@ -221,6 +223,11 @@ if(AETHR_BUILD_TESTS)
     enable_testing()
     add_subdirectory(Tests)
 endif()
+
+# ------------------------------------------------------------------------------
+# Installer packaging (DMG / Inno Setup) — see docs/PACKAGING.md
+# ------------------------------------------------------------------------------
+include(cmake/Packaging.cmake)
 
 # ------------------------------------------------------------------------------
 # Configuration summary

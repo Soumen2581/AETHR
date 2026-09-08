@@ -76,23 +76,28 @@ Install from artefacts using the commands in [`INSTALL.md`](INSTALL.md).
 
 ## Releases
 
-Push a tag:
+Primary artefacts (tag `v*` → Release workflow):
+
+| Platform | Package |
+|----------|---------|
+| macOS | `AETHR-vX.Y.Z-macOS.dmg` |
+| Windows | `AETHR-vX.Y.Z-Windows.exe` |
+| Checksums | `AETHR-vX.Y.Z-SHA256SUMS.txt` |
+
+End-user install: [`INSTALLATION.md`](INSTALLATION.md). Packaging internals: [`PACKAGING.md`](PACKAGING.md).
+
+Push a tag matching `CMakeLists.txt` `VERSION`:
 
 ```bash
 git tag v0.95.0
 git push origin v0.95.0
 ```
 
-The Release workflow builds both platforms with `cmake --preset ci`, tests, packages:
+macOS builds use the **`release`** preset (universal `arm64;x86_64`). Windows uses **`windows-release`**.
 
-- `AETHR-v0.95.0-macOS.zip`
-- `AETHR-v0.95.0-Windows.zip`
+Signing / notarization run only when the corresponding GitHub secrets are set; otherwise packages are explicitly **UNSIGNED**.
 
-and attaches them to the GitHub Release for that tag.
-
-The tag **must** match `project(AETHR VERSION …)` in `CMakeLists.txt` (e.g. tag `v0.95.0` ↔ `VERSION 0.95.0`). Mismatched tags fail the release job on purpose.
-
-`workflow_dispatch` can dry-run a package build without attaching assets (publish only runs on real `v*` tag pushes).
+`workflow_dispatch` can dry-run package builds without attaching assets (publish only runs on real `v*` tag pushes).
 
 Full RC procedure: [`RELEASE.md`](RELEASE.md).
 

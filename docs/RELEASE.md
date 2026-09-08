@@ -37,13 +37,23 @@ Run this before tagging `vX.Y.Z` (tag **must** equal CMake `VERSION`).
 ### Local
 
 - [ ] `./Tools/ci-static-check.sh` passes
-- [ ] `cmake --preset ci && cmake --build --preset ci --parallel`
-- [ ] `ctest --preset ci --output-on-failure` — all green
-- [ ] `./Tools/ci-verify-artefacts.sh build/ci/Aethr_artefacts/RelWithDebInfo macOS` (or Windows)
-- [ ] Smoke: load Standalone, play notes, step factory presets, SAVE a `.aethr`, INIT
-- [ ] Smoke: toggle ADV, open Library, Esc dismisses, MIDI PC changes preset (if keyboard available)
-- [ ] `docs/RISKS.md` residuals still accurate (R5 aliasing, unsigned macOS)
-- [ ] README / INSTALL version claims match this tag
+- [ ] Shipping build: `cmake --preset release` (macOS) / `windows-release` (Windows)
+- [ ] `cmake --build --preset … --parallel` + `ctest`
+- [ ] `cmake --build --preset … --target package-macos` or `package-windows`
+- [ ] Inspect `dist/macos/*.dmg` / `dist/windows/*.exe`
+- [ ] Smoke: install, launch Standalone, DAW scan, play notes
+- [ ] `docs/RISKS.md` residuals still accurate
+- [ ] README / INSTALLATION version claims match this tag
+
+### Installer artefacts
+
+| File | Role |
+|------|------|
+| `AETHR-x.y.z-macOS.dmg` | Primary macOS installer (contains Install AETHR.pkg) |
+| `AETHR-x.y.z-Windows.exe` | Primary Windows installer (Inno Setup) |
+| `AETHR-x.y.z-SHA256SUMS.txt` | Checksums |
+
+See [`PACKAGING.md`](PACKAGING.md) and [`INSTALLATION.md`](INSTALLATION.md).
 
 ### CI / GitHub
 

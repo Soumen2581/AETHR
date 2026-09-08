@@ -93,6 +93,34 @@
         "AETHR_BUILD_STANDALONE": "ON",
         "AETHR_BUILD_TESTS": "ON"
       }
+    },
+    {
+      "name": "windows-release",
+      "inherits": "base",
+      "displayName": "Windows Release (shipping installer)",
+      "description": "Optimised Windows VST3 + Standalone for Inno Setup packaging.",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "AETHR_WARNINGS_AS_ERRORS": "OFF",
+        "AETHR_COPY_AFTER_BUILD": "OFF",
+        "AETHR_BUILD_AU": "OFF",
+        "AETHR_BUILD_STANDALONE": "ON",
+        "AETHR_BUILD_TESTS": "ON"
+      }
+    },
+    {
+      "name": "package-macos",
+      "inherits": "release",
+      "displayName": "macOS package (universal Release + DMG)",
+      "description": "Same as release; use build preset package-macos / target package-macos after building.",
+      "cacheVariables": {
+        "AETHR_COPY_AFTER_BUILD": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -101,7 +129,9 @@
     { "name": "release", "configurePreset": "release" },
     { "name": "release-native", "configurePreset": "release-native" },
     { "name": "windows", "configurePreset": "windows" },
-    { "name": "ci", "configurePreset": "ci" }
+    { "name": "windows-release", "configurePreset": "windows-release" },
+    { "name": "ci", "configurePreset": "ci" },
+    { "name": "package-macos", "configurePreset": "package-macos", "targets": ["package-macos"] }
   ],
   "testPresets": [
     {

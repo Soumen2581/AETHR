@@ -14,8 +14,8 @@ Formats:
 Company: **ixmuk**. CI builds and tests both platforms on every push
 ([docs/CI.md](docs/CI.md)).
 
-**Install:** see **[docs/INSTALL.md](docs/INSTALL.md)** for macOS and Windows
-(CI artefacts, folder paths, DAW tips).
+**Install:** end users — **[docs/INSTALLATION.md](docs/INSTALLATION.md)** (DMG / EXE).
+Developers / CI zips — **[docs/INSTALL.md](docs/INSTALL.md)**.
 
 AETHR is an experimental synthesis lab: thirteen selectable engines in one chassis —
 physical (string through cavity), synthetic (waveguide / modal / spectral), and
@@ -73,7 +73,9 @@ clean settings). Other engines are distinct character models — see
 
 | Document | Contents |
 |----------|----------|
-| **[INSTALL.md](docs/INSTALL.md)** | **How to install on macOS and Windows** |
+| **[INSTALL.md](docs/INSTALL.md)** | **How to install on macOS and Windows (dev / CI zips)** |
+| **[INSTALLATION.md](docs/INSTALLATION.md)** | **End-user DMG / EXE installers** |
+| **[PACKAGING.md](docs/PACKAGING.md)** | **How installers are built** |
 | **[CI.md](docs/CI.md)** | **GitHub Actions, local≈CI, releases, artefacts** |
 | **[RELEASE.md](docs/RELEASE.md)** | **0.95 feature freeze + RC checklist** |
 | **[FINAL_POLISH_AUDIT.md](docs/FINAL_POLISH_AUDIT.md)** | Final polish issue ranking |

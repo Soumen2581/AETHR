@@ -1,7 +1,6 @@
 name: Release
 
-# Builds versioned plugin packages and attaches them to a GitHub Release.
-# Triggered only by an explicit v* tag (or manual dispatch for a dry-run build).
+# Tag-triggered professional installers (DMG + EXE) + checksums.
 # Ordinary pushes never publish a release.
 
 on:
@@ -10,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Version tag without creating a release (e.g. v0.1.0). Empty = github.ref_name.'
+        description: 'Version tag dry-run (e.g. v0.95.0). Empty = github.ref_name.'
         required: false
         default: ''
 
@@ -25,19 +24,23 @@ jobs:
   build:
     name: Package ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 120
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
           - os: macos-14
             name: macOS
             verify_os: macOS
-            zip_prefix: macOS
+            cmake_preset: release
+            build_config: Release
+            artefact_name: macos
           - os: windows-2022
             name: Windows
             verify_os: Windows
-            zip_prefix: Windows
+            cmake_preset: windows-release
+            build_config: Release
+            artefact_name: windows
 
     steps:
       - name: Checkout
@@ -53,7 +56,6 @@ jobs:
           else
             RAW="${GITHUB_REF_NAME}"
           fi
-          # Accept "v0.1.0" or "0.1.0"
           VER="${RAW#v}"
           if [[ ! "${VER}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-].+)?$ ]]; then
             echo "Refusing non-semver-like version: '${RAW}'"
@@ -61,7 +63,6 @@ jobs:
           fi
           echo "version=${VER}" >> "$GITHUB_OUTPUT"
           echo "tag=v${VER}" >> "$GITHUB_OUTPUT"
-          echo "Building release artefacts for v${VER}"
 
       - name: Check version matches CMake
         shell: bash
@@ -73,7 +74,6 @@ jobs:
           echo "Release tag version:   ${TAG_VER}"
           if [[ "${CMAKE_VER}" != "${TAG_VER}" ]]; then
             echo "::error::Tag v${TAG_VER} does not match CMakeLists.txt VERSION ${CMAKE_VER}."
-            echo "Bump project(AETHR VERSION …) before tagging, or retag to match."
             exit 1
           fi
 
@@ -81,9 +81,10 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install ninja
 
-      - name: Install Ninja (Windows)
+      - name: Install Ninja + Inno Setup (Windows)
         if: runner.os == 'Windows'
-        run: choco install ninja -y
+        run: |
+          choco install ninja innosetup -y
 
       - name: Enable MSVC environment (Windows)
         if: runner.os == 'Windows'
@@ -93,30 +94,30 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            build/ci/_deps
+            build/${{ matrix.cmake_preset }}/_deps
             External/JUCE
             External/Catch2
-          key: deps-v2-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'Tests/CMakeLists.txt', 'CMakePresets.json') }}
+          key: deps-v3-${{ runner.os }}-${{ matrix.cmake_preset }}-${{ hashFiles('CMakeLists.txt', 'Tests/CMakeLists.txt', 'CMakePresets.json') }}
           restore-keys: |
-            deps-v2-${{ runner.os }}-
+            deps-v3-${{ runner.os }}-${{ matrix.cmake_preset }}-
 
       - name: Configure
         run: |
-          cmake --preset ci
-          test -f build/ci/CMakeCache.txt || (echo "Configure did not produce CMakeCache.txt" && exit 1)
+          cmake --preset ${{ matrix.cmake_preset }}
+          test -f build/${{ matrix.cmake_preset }}/CMakeCache.txt
 
       - name: Build
-        run: cmake --build --preset ci --parallel
+        run: cmake --build --preset ${{ matrix.cmake_preset }} --parallel
 
       - name: Unit / DSP / Engine tests
-        run: ctest --preset ci --output-on-failure --parallel
+        run: ctest --test-dir build/${{ matrix.cmake_preset }} --output-on-failure --parallel
 
       - name: Verify plugin artefacts
         shell: bash
         run: |
           chmod +x Tools/ci-verify-artefacts.sh
           ./Tools/ci-verify-artefacts.sh \
-            build/ci/Aethr_artefacts/RelWithDebInfo \
+            "build/${{ matrix.cmake_preset }}/Aethr_artefacts/${{ matrix.build_config }}" \
             "${{ matrix.verify_os }}"
 
       - name: Pluginval (macOS VST3)
@@ -130,58 +131,93 @@ jobs:
             --strictness-level 8 \
             --validate-in-process \
             --skip-gui-tests \
-            --output-dir build/ci/pluginval \
-            "build/ci/Aethr_artefacts/RelWithDebInfo/VST3/AETHR.vst3"
+            --output-dir build/${{ matrix.cmake_preset }}/pluginval \
+            "build/${{ matrix.cmake_preset }}/Aethr_artefacts/${{ matrix.build_config }}/VST3/AETHR.vst3"
 
-      - name: Packaging (macOS)
+      - name: Package macOS DMG
         if: runner.os == 'macOS'
+        env:
+          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
+          APPLE_INSTALLER_ID: ${{ secrets.APPLE_INSTALLER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: |
           set -euo pipefail
-          VER="${{ steps.ver.outputs.version }}"
-          ART="build/ci/Aethr_artefacts/RelWithDebInfo"
-          STAGE="dist/stage"
-          mkdir -p "${STAGE}"
-          cp -R "$ART/VST3/AETHR.vst3" "${STAGE}/"
-          cp -R "$ART/AU/AETHR.component" "${STAGE}/"
-          cp -R "$ART/Standalone/AETHR.app" "${STAGE}/"
-          (cd "${STAGE}" && zip -ry "../AETHR-v${VER}-macOS.zip" .)
-          ls -la dist
-          unzip -l "dist/AETHR-v${VER}-macOS.zip"
+          chmod +x Tools/package_macos.sh Tools/validate_macos_package.sh Tools/sanitise-macos-bundle.sh
+          cmake --build --preset ${{ matrix.cmake_preset }} --target package-macos
+          test -f "dist/macos/AETHR-${{ steps.ver.outputs.version }}-macOS.dmg"
+          test -f "dist/macos/AETHR-${{ steps.ver.outputs.version }}-macOS.pkg"
+          cat dist/macos/PACKAGING_STATUS.txt
 
-      - name: Packaging (Windows)
+      - name: Package Windows EXE
         if: runner.os == 'Windows'
+        env:
+          WINDOWS_CERT_PATH: ${{ secrets.WINDOWS_CERT_PATH }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Stop'
-          $ver = '${{ steps.ver.outputs.version }}'
-          $art = 'build/ci/Aethr_artefacts/RelWithDebInfo'
-          New-Item -ItemType Directory -Force dist/stage | Out-Null
-          Copy-Item -Recurse "$art/VST3/AETHR.vst3" dist/stage/
-          Copy-Item "$art/Standalone/AETHR.exe" dist/stage/
-          Compress-Archive -Path dist/stage/* -DestinationPath "dist/AETHR-v${ver}-Windows.zip" -Force
-          Get-ChildItem dist
+          cmake --build --preset ${{ matrix.cmake_preset }} --target package-windows
+          if (-not (Test-Path "dist/windows/AETHR-${{ steps.ver.outputs.version }}-Windows.exe")) {
+            throw "Windows installer missing"
+          }
+          Get-Content dist/windows/PACKAGING_STATUS.txt
 
-      - name: Upload release artefacts
+      - name: Upload installer artefacts
         uses: actions/upload-artifact@v4
         with:
-          name: AETHR-v${{ steps.ver.outputs.version }}-${{ matrix.zip_prefix }}
-          path: dist/AETHR-v${{ steps.ver.outputs.version }}-*.zip
+          name: AETHR-v${{ steps.ver.outputs.version }}-${{ matrix.artefact_name }}
+          path: |
+            dist/macos/AETHR-*-macOS.dmg
+            dist/macos/AETHR-*-macOS.pkg
+            dist/macos/PACKAGING_STATUS.txt
+            dist/windows/AETHR-*-Windows.exe
+            dist/windows/PACKAGING_STATUS.txt
           if-no-files-found: error
+
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-logs-${{ matrix.artefact_name }}
+          path: |
+            build/${{ matrix.cmake_preset }}/Testing/Temporary/
+            build/${{ matrix.cmake_preset }}/pluginval/
+          if-no-files-found: ignore
 
   publish:
     name: Attach to GitHub Release
     needs: build
     runs-on: ubuntu-24.04
-    # Only attach assets when this run was triggered by a real v* tag push.
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
+      - name: Checkout (for release notes template)
+        uses: actions/checkout@v4
+
       - name: Download all artefacts
         uses: actions/download-artifact@v4
         with:
           path: release-assets
 
-      - name: List assets
-        run: find release-assets -type f -name '*.zip' | sort
+      - name: Collect installers + checksums
+        id: assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          VER="${GITHUB_REF_NAME#v}"
+          mkdir -p upload
+          find release-assets -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.pkg' -o -name 'PACKAGING_STATUS.txt' \) -print
+          find release-assets -type f \( -name 'AETHR-*-macOS.dmg' -o -name 'AETHR-*-Windows.exe' \) -exec cp {} upload/ \;
+          test -f "upload/AETHR-${VER}-macOS.dmg" || { echo "missing macOS DMG"; exit 1; }
+          test -f "upload/AETHR-${VER}-Windows.exe" || { echo "missing Windows EXE"; exit 1; }
+          (
+            cd upload
+            shasum -a 256 "AETHR-${VER}-macOS.dmg" "AETHR-${VER}-Windows.exe" | tee "AETHR-${VER}-SHA256SUMS.txt"
+          )
+          ls -lh upload
 
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
@@ -191,16 +227,35 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
           generate_release_notes: true
-          files: release-assets/**/*.zip
+          files: |
+            upload/AETHR-*-macOS.dmg
+            upload/AETHR-*-Windows.exe
+            upload/AETHR-*-SHA256SUMS.txt
           fail_on_unmatched_files: true
           body: |
-            ## Packages
+            ## Installers
 
-            | Platform | Archive |
+            | Platform | Package |
             |----------|---------|
-            | macOS (VST3 + AU + Standalone) | `AETHR-${{ github.ref_name }}-macOS.zip` |
-            | Windows (VST3 + Standalone) | `AETHR-${{ github.ref_name }}-Windows.zip` |
+            | macOS | `AETHR-${{ github.ref_name }}-macOS.dmg` |
+            | Windows | `AETHR-${{ github.ref_name }}-Windows.exe` |
+            | Checksums | `AETHR-${{ github.ref_name }}-SHA256SUMS.txt` |
 
-            Install steps: see `docs/INSTALL.md` in the repository.
+            ### Install
+
+            - **macOS:** open the DMG → run **Install AETHR.pkg** (places Standalone in `/Applications`, VST3/AU in `/Library/Audio/Plug-Ins/…`).
+            - **Windows:** run the EXE installer (VST3 → `%CommonProgramFiles%\VST3`, app → `%ProgramFiles%\AETHR`).
+
+            Full guide: [`docs/INSTALLATION.md`](https://github.com/Soumen2581/AETHR/blob/master/docs/INSTALLATION.md).
+
+            ### Platforms
+
+            - macOS 11+ — VST3, AU, Standalone (universal when built with the `release` preset)
+            - Windows 10/11 x64 — VST3, Standalone
+
+            ### Known residuals
+
+            - Unsigned / un-notarized builds if Apple/Windows signing secrets are not configured
+            - Hard/wavefold saturation may alias (Soft is the default)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

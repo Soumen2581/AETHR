@@ -5,6 +5,7 @@ cmake-build-*/
 out/
 Artefacts/
 Reports/
+dist/
 
 # Vendored dependencies (fetched by CMake from pinned tags)
 External/JUCE/
@@ -14,6 +15,13 @@ External/Catch2/
 Tools/pluginval/
 Tools/pluginval.app/
 Tools/pluginval.zip
+
+# Packaging / signing scratch
+*.dmg
+!docs/**/*.dmg
+packaging/**/*.pkg
+*.notarization-upload.zip
+Assets/icons/AETHR.iconset/
 
 # IDE / editor / cache
 .idea/
