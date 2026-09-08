@@ -19,7 +19,7 @@ namespace aethr::branding
 #endif
 
 #ifndef AETHR_COMPANY_NAME
-    #define AETHR_COMPANY_NAME "Aethr Audio"
+    #define AETHR_COMPANY_NAME "ixmuk"
 #endif
 
 #ifndef AETHR_VERSION_STRING

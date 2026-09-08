@@ -19,10 +19,10 @@ cmake_minimum_required(VERSION 3.25)
 # ------------------------------------------------------------------------------
 set(AETHR_PRODUCT_NAME    "AETHR"                        CACHE STRING "User-visible product name")
 set(AETHR_PRODUCT_TAGLINE "Physical Resonance Engine"     CACHE STRING "Subtitle shown in the UI")
-set(AETHR_COMPANY_NAME    "Aethr Audio"                  CACHE STRING "Manufacturer name")
-set(AETHR_COMPANY_DOMAIN  "aethraudio.com"               CACHE STRING "Manufacturer domain (reverse-DNS bundle IDs)")
-set(AETHR_BUNDLE_ID       "com.aethraudio.aethr"        CACHE STRING "macOS bundle identifier")
-set(AETHR_MANUFACTURER_ID "Aeth"                          CACHE STRING "4-character manufacturer code (must start uppercase)")
+set(AETHR_COMPANY_NAME    "ixmuk"                        CACHE STRING "Manufacturer name")
+set(AETHR_COMPANY_DOMAIN  "ixmuk.com"                    CACHE STRING "Manufacturer domain (reverse-DNS bundle IDs)")
+set(AETHR_BUNDLE_ID       "com.ixmuk.aethr"              CACHE STRING "macOS bundle identifier")
+set(AETHR_MANUFACTURER_ID "Ixmk"                          CACHE STRING "4-character manufacturer code (must start uppercase)")
 set(AETHR_PLUGIN_ID       "Aetr"                          CACHE STRING "4-character plugin code (must start uppercase)")
 
 project(AETHR
