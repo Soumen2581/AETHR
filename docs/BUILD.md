@@ -18,6 +18,12 @@ option (3.25) to suppress warnings from dependency headers, and `CMakePresets` s
 removed support for `cmake_minimum_required` values below 3.5; nothing in this project or its two
 dependencies declares such a floor, so CMake 4 works without compatibility shims.
 
+## Continuous integration
+
+GitHub Actions (`.github/workflows/ci.yml`) builds and tests on **macOS** and **Linux**
+on every push and pull request to `master` / `main`. CI configures with
+`AETHR_WARNINGS_AS_ERRORS=ON` and `AETHR_COPY_AFTER_BUILD=OFF`.
+
 ## Quick start
 
 ```bash

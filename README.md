@@ -1,5 +1,7 @@
 # AETHR — Physical Resonance Engine
 
+[![CI](https://github.com/Soumen2581/AETHR/actions/workflows/ci.yml/badge.svg)](https://github.com/Soumen2581/AETHR/actions/workflows/ci.yml)
+
 A polyphonic physical-modelling instrument by **Aethr Audio**.
 Formats: **VST3**, **Audio Unit**, **Standalone**.
 
