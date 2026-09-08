@@ -29,10 +29,32 @@ Tags in use: `[math]`, `[pitch]`, `[gain]`, `[decay]`, `[guards]`, `[stability]`
 
 ## Current status
 
-**28 tests, all passing.** Total runtime 0.44 s — fast enough that there is never a reason to skip
-them.
+**~78 Catch2 tests**, run on every CI build for **macOS and Windows**. Local:
 
-### What is covered as of Phase 1
+```bash
+cmake --preset ci && cmake --build --preset ci && ctest --preset ci
+```
+
+Host validation: **pluginval** (macOS CI, strictness 8, in-process, GUI skipped).
+`auval` is documented for local macOS checks (`docs/INSTALL.md` / `docs/BUILD.md`) —
+manufacturer code **Ixmk**, plugin code **Aetr**.
+
+### What is covered
+
+| Area | Tests |
+| --- | --- |
+| Pitch maths | MIDI→Hz, Hz↔note, cent/semitone consistency |
+| Gain maths | dB↔gain, silence floor |
+| Guards | NaN/Inf sanitise, denormals, coefficient validity |
+| Pitch / resonator / exciter | Tuning accuracy, decay, excitation types |
+| Processor | Buses, identity, block sizes, sample rates, editor construct |
+| Engines | All catalogue entries initialise and render finite audio |
+| State | APVTS round-trip for representative parameters |
+| Engine switch | Mid-session switching stays finite |
+
+Stale Phase-1 counts (“28 tests”, “no Windows”) are retired — see `docs/CI.md`.
+
+### What is covered as of Phase 1 (historical)
 
 | Area | Tests |
 | --- | --- |

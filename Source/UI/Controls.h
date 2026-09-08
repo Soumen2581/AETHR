@@ -122,6 +122,13 @@ public:
         repaint();
     }
 
+    void setEnabledVisual (bool shouldBeEnabled)
+    {
+        setEnabled (shouldBeEnabled);
+        slider.setEnabled (shouldBeEnabled);
+        setAlpha (shouldBeEnabled ? 1.0f : 0.38f);
+    }
+
     void paint (juce::Graphics& g) override
     {
         auto bounds = getLocalBounds().toFloat();
@@ -245,7 +252,10 @@ private:
 class AethrCombo : public juce::Component
 {
 public:
-    AethrCombo (juce::AudioProcessorValueTreeState& state, const juce::String& paramId, juce::String nameToUse)
+    AethrCombo (juce::AudioProcessorValueTreeState& state,
+                const juce::String& paramId,
+                juce::String nameToUse,
+                juce::String hint = {})
         : name (std::move (nameToUse))
     {
         if (auto* choice = dynamic_cast<juce::AudioParameterChoice*> (state.getParameter (paramId)))
@@ -255,11 +265,24 @@ public:
         combo.setColour (juce::ComboBox::textColourId, juce::Colour (Theme::text));
         combo.setColour (juce::ComboBox::outlineColourId, juce::Colour (Theme::goldDim));
         combo.setColour (juce::ComboBox::arrowColourId, juce::Colour (Theme::gold));
+
+        if (hint.isNotEmpty())
+            combo.setTooltip (name + "\n\n" + hint);
+        else
+            combo.setTooltip (name);
+
         addAndMakeVisible (combo);
         attachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment> (state, paramId, combo);
     }
 
     juce::ComboBox& getCombo() noexcept { return combo; }
+
+    void setEnabledVisual (bool shouldBeEnabled)
+    {
+        setEnabled (shouldBeEnabled);
+        combo.setEnabled (shouldBeEnabled);
+        setAlpha (shouldBeEnabled ? 1.0f : 0.38f);
+    }
 
     void paint (juce::Graphics& g) override
     {
@@ -315,12 +338,28 @@ public:
 class AethrToggle : public juce::Component
 {
 public:
-    AethrToggle (juce::AudioProcessorValueTreeState& state, const juce::String& paramId, juce::String nameToUse)
+    AethrToggle (juce::AudioProcessorValueTreeState& state,
+                 const juce::String& paramId,
+                 juce::String nameToUse,
+                 juce::String hint = {})
     {
         button.setButtonText (nameToUse.toUpperCase());
         button.setClickingTogglesState (true);
+
+        if (hint.isNotEmpty())
+            button.setTooltip (nameToUse + "\n\n" + hint);
+        else
+            button.setTooltip (nameToUse);
+
         addAndMakeVisible (button);
         attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment> (state, paramId, button);
+    }
+
+    void setEnabledVisual (bool shouldBeEnabled)
+    {
+        setEnabled (shouldBeEnabled);
+        button.setEnabled (shouldBeEnabled);
+        setAlpha (shouldBeEnabled ? 1.0f : 0.38f);
     }
 
     void resized() override { button.setBounds (getLocalBounds().reduced (4, 6)); }

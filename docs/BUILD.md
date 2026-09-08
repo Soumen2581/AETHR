@@ -96,7 +96,7 @@ question of whether AU can still be built was answered empirically rather than a
   only the `AudioUnit` and `CoreAudioKit` frameworks from the macOS SDK, both of which the CLT SDK
   provides. `juceaide` also builds and runs correctly.
 - **`auval` is available at `/usr/bin/auval`** — it ships with macOS, not with Xcode. Running
-  `auval -v aumu Aetr Aeth` against the built component reports **AU VALIDATION SUCCEEDED**,
+  `auval -v aumu Aetr Ixmk` against the built component reports **AU VALIDATION SUCCEEDED**,
   including render tests at 11 025 / 22 050 / 44 100 / 48 000 / 96 000 / 192 000 Hz, block sizes from
   64 to 4096, the deliberately-too-large-block failure case, parameter scheduling and MIDI.
 - **AUv3 is not buildable here.** It requires an app-extension target that only Xcode can produce.
@@ -166,7 +166,7 @@ Tools/pluginval.app/Contents/MacOS/pluginval \
     --strictness-level 10 --timeout-ms 180000 \
     --validate build/dev/Aethr_artefacts/RelWithDebInfo/VST3/AETHR.vst3
 
-auval -v aumu Aetr Aeth                        # macOS only, AU
+auval -v aumu Aetr Ixmk                        # macOS only, AU
 ```
 
 Phase 1 status: **pluginval passes at strictness level 10** (its maximum) and **auval passes**.

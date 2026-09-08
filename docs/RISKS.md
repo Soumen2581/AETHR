@@ -70,13 +70,17 @@ pitch artefacts.
 
 ## R5 — Aliasing from the nonlinear stages
 
-**Likelihood** medium · **Impact** high (the classic "cheap plugin" giveaway) · **Status** design
-decided, verification in Phase 10
+**Likelihood** medium · **Impact** high (the classic "cheap plugin" giveaway) · **Status** residual —
+saturation currently runs at audio rate without oversampling
 
-*Mitigation:* oversample only the nonlinear sections, at a factor matched to the harmonic content the
-mode generates (2× gentle, 4× hard clip and wavefold, 8× extreme); linear-phase FIR anti-aliasing
-where dry/wet mixing occurs; report oversampling latency to the host; measure alias energy by FFT and
-assert it below threshold at each factor.
+*Mitigation (planned):* oversample only the nonlinear sections, at a factor matched to the harmonic
+content the mode generates (2× gentle, 4× hard clip and wavefold, 8× extreme); linear-phase FIR
+anti-aliasing where dry/wet mixing occurs; report oversampling latency to the host; measure alias
+energy by FFT and assert it below threshold at each factor.
+
+*Current shipping behaviour:* Soft / tube / tape modes are preferred defaults; hard clip and
+wavefold remain available and can alias at high drive. Documented rather than falsely claimed as
+oversampled.
 
 ---
 

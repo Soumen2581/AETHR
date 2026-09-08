@@ -33,6 +33,8 @@ private:
     void applyPreset (int index);
     void showBrowser (bool show);
     void pulseLaboratory();
+    void updateSyncEnableState();
+    void saveUserPreset();
 
     AethrProcessor& aethrProcessor;
     ui::LookAndFeel lookAndFeel;
@@ -45,6 +47,7 @@ private:
     ui::AethrPlate mutateButton { "MUTATE" };
     ui::AethrPlate undoButton { "UNDO" };
     ui::AethrPlate redoButton { "REDO" };
+    ui::AethrPlate advancedButton { "ADV" };
     juce::ComboBox laboratoryBox;
     ui::AethrEngineStrip engineStrip;
     ui::AethrArpStrip arpStrip;
@@ -85,6 +88,20 @@ private:
     ui::AethrKnob* engineControlB { nullptr };
     ui::AethrKnob* engineControlC { nullptr };
     ui::AethrKnob* engineControlD { nullptr };
+    ui::AethrKnob* lfo1RateKnob { nullptr };
+    ui::AethrKnob* lfo2RateKnob { nullptr };
+    ui::AethrKnob* chaosRateKnob { nullptr };
+    ui::AethrKnob* delayTimeLKnob { nullptr };
+    ui::AethrKnob* delayTimeRKnob { nullptr };
+    ui::AethrKnob* chorusRateKnob { nullptr };
+    ui::AethrKnob* phaserRateKnob { nullptr };
+    ui::AethrCombo* lfo1DivCombo { nullptr };
+    ui::AethrCombo* lfo2DivCombo { nullptr };
+    ui::AethrCombo* chaosDivCombo { nullptr };
+    ui::AethrCombo* delayDivLCombo { nullptr };
+    ui::AethrCombo* delayDivRCombo { nullptr };
+    ui::AethrCombo* chorusDivCombo { nullptr };
+    ui::AethrCombo* phaserDivCombo { nullptr };
     engine::EngineType displayedEngine { engine::EngineType::string };
 
     int currentPreset { 0 };
@@ -92,7 +109,9 @@ private:
     float headerPulse { 0.0f };
     int displayedVoices { 0 };
     bool applyingMaterial { false };
+    bool advancedMode { false };
     juce::Random rng { 0xae711u };
+    std::unique_ptr<juce::FileChooser> fileChooser;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AethrEditor)
 };

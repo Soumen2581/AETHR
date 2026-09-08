@@ -76,30 +76,40 @@ AethrEditor::AethrEditor (AethrProcessor& processorToUse)
     presetField.setText (presets::factory[0].name, presets::factory[0].category);
 
     initButton.onClick = [this] { applyPreset (0); };
-    saveButton.onClick = [this]
-    {
-        aethrProcessor.getUndoManager().beginNewTransaction ("AETHR save");
-        headerPulse = 1.0f;
-    };
+    initButton.setTooltip ("INIT\n\nReset every parameter to the factory Init snapshot.");
+    saveButton.onClick = [this] { saveUserPreset(); };
+    saveButton.setTooltip ("SAVE\n\nWrite the current sound as a user .aethr preset file.");
     randomButton.onClick = [this]
     {
         const auto mode = static_cast<presets::RandomMode> (std::clamp (laboratoryBox.getSelectedItemIndex(), 0, 3));
         presets::randomize (aethrProcessor.getValueTreeState(), mode, rng);
         pulseLaboratory();
     };
+    randomButton.setTooltip ("RAND\n\nMusically constrained randomisation. Depth follows the Laboratory mode.");
     mutateButton.onClick = [this]
     {
         presets::mutate (aethrProcessor.getValueTreeState(), rng);
         headerPulse = 0.7f;
     };
+    mutateButton.setTooltip ("MUTATE\n\nNudge the current sound slightly without destroying its character.");
     undoButton.onClick = [this] { aethrProcessor.getUndoManager().undo(); };
+    undoButton.setTooltip ("UNDO\n\nUndo the last parameter or preset change.");
     redoButton.onClick = [this] { aethrProcessor.getUndoManager().redo(); };
+    redoButton.setTooltip ("REDO\n\nRedo the last undone change.");
+    advancedButton.setClickingTogglesState (true);
+    advancedButton.setTooltip ("ADV\n\nEngineering mode: show the full modulation and motion sections.\nPerformance mode keeps the chassis focused on core sound shaping.");
+    advancedButton.onClick = [this]
+    {
+        advancedMode = advancedButton.getToggleState();
+        resized();
+    };
 
-    for (auto* button : { &initButton, &saveButton, &randomButton, &mutateButton, &undoButton, &redoButton })
+    for (auto* button : { &initButton, &saveButton, &randomButton, &mutateButton, &undoButton, &redoButton, &advancedButton })
         addAndMakeVisible (*button);
 
     laboratoryBox.addItemList ({ "Safe", "Musical", "Experimental", "Chaotic" }, 1);
     laboratoryBox.setSelectedId (2, juce::dontSendNotification);
+    laboratoryBox.setTooltip ("LABORATORY\n\nControls how aggressive RAND is: Safe stays playable, Chaotic explores extremes.");
     addAndMakeVisible (laboratoryBox);
     addAndMakeVisible (engineStrip);
     addAndMakeVisible (arpStrip);
@@ -126,31 +136,42 @@ AethrEditor::AethrEditor (AethrProcessor& processorToUse)
         knobs.push_back (std::move (item));
         return *knobs.back();
     };
-    const auto menu = [this, &state] (juce::Component& parent, const char* id, const juce::String& name)
-        -> ui::AethrCombo&
+    const auto menu = [this, &state] (juce::Component& parent, const char* id, const juce::String& name,
+                                      juce::String hint = {}) -> ui::AethrCombo&
     {
-        auto item = std::make_unique<ui::AethrCombo> (state, id, name);
+        auto item = std::make_unique<ui::AethrCombo> (state, id, name, std::move (hint));
         parent.addAndMakeVisible (*item);
         auto& ref = *item;
         combos.push_back (std::move (item));
         return ref;
     };
-    const auto toggle = [this, &state] (juce::Component& parent, const char* id, const juce::String& name)
+    const auto toggle = [this, &state] (juce::Component& parent, const char* id, const juce::String& name,
+                                        juce::String hint = {})
     {
-        auto item = std::make_unique<ui::AethrToggle> (state, id, name);
+        auto item = std::make_unique<ui::AethrToggle> (state, id, name, std::move (hint));
         parent.addAndMakeVisible (*item);
         toggles.push_back (std::move (item));
     };
 
     exciterSection.addAndMakeVisible (exciterView);
-    menu (exciterSection, params::exciter::type, "Source");
-    knob (exciterSection, params::exciter::burstTime, "Burst", ui::KnobSize::secondary, "Excitation burst length.");
-    knob (exciterSection, params::exciter::attack, "Attack", ui::KnobSize::secondary, "Impulse attack time.");
-    knob (exciterSection, params::exciter::colour, "Colour", ui::KnobSize::secondary, "Spectral tilt of the strike.");
-    knob (exciterSection, params::exciter::brightness, "Bright", ui::KnobSize::secondary, "High-frequency energy in the strike.");
-    knob (exciterSection, params::exciter::level, "Level", ui::KnobSize::secondary, "Excitation amplitude.");
-    knob (exciterSection, params::exciter::randomAmount, "Scatter", ui::KnobSize::micro, "Strike-to-strike variation.");
-    knob (exciterSection, params::exciter::stereoSpread, "Spread", ui::KnobSize::micro, "Left/right excitation offset.");
+    menu (exciterSection, params::exciter::type, "Source",
+          "Excitation source. Pluck is the default physical strike; others reshape the transient.");
+    knob (exciterSection, params::exciter::burstTime, "Burst", ui::KnobSize::secondary,
+          "Excitation burst length. Shorter values feel more percussive; longer values smear the strike.");
+    knob (exciterSection, params::exciter::attack, "Attack", ui::KnobSize::secondary,
+          "Impulse attack time. Softens the leading edge of the excitation.");
+    knob (exciterSection, params::exciter::colour, "Colour", ui::KnobSize::secondary,
+          "Spectral tilt of the strike. Positive values brighten the impulse.");
+    knob (exciterSection, params::exciter::brightness, "Bright", ui::KnobSize::secondary,
+          "High-frequency energy in the strike before it enters the resonator.");
+    knob (exciterSection, params::exciter::level, "Level", ui::KnobSize::secondary,
+          "Excitation amplitude into the physical model.");
+    knob (exciterSection, params::exciter::randomAmount, "Scatter", ui::KnobSize::micro,
+          "Strike-to-strike variation. Keeps repeated notes from sounding mechanical.");
+    knob (exciterSection, params::exciter::stereoSpread, "Spread", ui::KnobSize::micro,
+          "Left/right excitation offset for a wider stereo image.");
+    knob (exciterSection, params::exciter::seed, "Seed", ui::KnobSize::micro,
+          "Noise seed for excitation. Lock Seed freezes the pattern for reproducible strikes.");
 
     resonatorSection.addAndMakeVisible (resonatorView);
     knob (resonatorSection, params::resonator::feedback, "Feedback", ui::KnobSize::primary,
@@ -230,52 +251,54 @@ AethrEditor::AethrEditor (AethrProcessor& processorToUse)
     knob (macroSection, params::macros::drive, "Drive", ui::KnobSize::primary, "Drive macro.");
 
     modSection.addAndMakeVisible (lfo1View);
-    menu (modSection, params::lfo1::wave, "LFO 1");
-    toggle (modSection, params::lfo1::sync, "Sync");
-    menu (modSection, params::lfo1::division, "Div");
-    knob (modSection, params::lfo1::rate, "Rate", ui::KnobSize::secondary, "LFO 1 free rate when Sync is off.");
-    knob (modSection, params::lfo1::depth, "Amount", ui::KnobSize::secondary, "LFO 1 amount.");
-    menu (modSection, params::lfo1::dest, "Dest");
+    menu (modSection, params::lfo1::wave, "LFO 1", "Waveform for LFO 1.");
+    toggle (modSection, params::lfo1::sync, "Sync", "When on, LFO 1 follows host tempo via Div.");
+    lfo1DivCombo = &menu (modSection, params::lfo1::division, "Div", "Tempo division for LFO 1 when Sync is on.");
+    lfo1RateKnob = &knob (modSection, params::lfo1::rate, "Rate", ui::KnobSize::secondary, "LFO 1 free rate when Sync is off.");
+    knob (modSection, params::lfo1::depth, "Amount", ui::KnobSize::secondary, "LFO 1 modulation depth.");
+    menu (modSection, params::lfo1::dest, "Dest", "Destination for LFO 1.");
     modSection.addAndMakeVisible (lfo2View);
-    menu (modSection, params::lfo2::wave, "LFO 2");
-    toggle (modSection, params::lfo2::sync, "Sync");
-    menu (modSection, params::lfo2::division, "Div");
-    knob (modSection, params::lfo2::rate, "Rate", ui::KnobSize::secondary, "LFO 2 free rate when Sync is off.");
-    knob (modSection, params::lfo2::depth, "Amount", ui::KnobSize::secondary, "LFO 2 amount.");
-    menu (modSection, params::lfo2::dest, "Dest");
+    menu (modSection, params::lfo2::wave, "LFO 2", "Waveform for LFO 2.");
+    toggle (modSection, params::lfo2::sync, "Sync", "When on, LFO 2 follows host tempo via Div.");
+    lfo2DivCombo = &menu (modSection, params::lfo2::division, "Div", "Tempo division for LFO 2 when Sync is on.");
+    lfo2RateKnob = &knob (modSection, params::lfo2::rate, "Rate", ui::KnobSize::secondary, "LFO 2 free rate when Sync is off.");
+    knob (modSection, params::lfo2::depth, "Amount", ui::KnobSize::secondary, "LFO 2 modulation depth.");
+    menu (modSection, params::lfo2::dest, "Dest", "Destination for LFO 2.");
     knob (modSection, params::env::attack, "A", ui::KnobSize::micro, "Aux envelope attack.");
     knob (modSection, params::env::decay, "D", ui::KnobSize::micro, "Aux envelope decay.");
     knob (modSection, params::env::sustain, "S", ui::KnobSize::micro, "Aux envelope sustain.");
     knob (modSection, params::env::release, "R", ui::KnobSize::micro, "Aux envelope release.");
     knob (modSection, params::env::depth, "Env", ui::KnobSize::secondary, "Aux envelope amount.");
-    menu (modSection, params::env::dest, "Env Dest");
+    menu (modSection, params::env::dest, "Env Dest", "Destination for the aux envelope.");
     knob (modSection, params::chaos::amount, "Chaos", ui::KnobSize::secondary, "Chaotic modulation amount.");
-    toggle (modSection, params::chaos::sync, "Sync");
-    menu (modSection, params::chaos::division, "Div");
-    knob (modSection, params::chaos::rate, "Rate", ui::KnobSize::micro, "Chaos free rate when Sync is off.");
+    toggle (modSection, params::chaos::sync, "Sync", "When on, Chaos follows host tempo via Div.");
+    chaosDivCombo = &menu (modSection, params::chaos::division, "Div", "Tempo division for Chaos when Sync is on.");
+    chaosRateKnob = &knob (modSection, params::chaos::rate, "Rate", ui::KnobSize::micro, "Chaos free rate when Sync is off.");
     knob (modSection, params::chaos::bias, "Bias", ui::KnobSize::micro, "Chaos bias.");
     modSection.addAndMakeVisible (modMatrix);
 
     delaySection.addAndMakeVisible (delayView);
-    toggle (delaySection, params::fx::delaySync, "Sync");
-    menu (delaySection, params::fx::delayDivisionL, "Div L");
-    knob (delaySection, params::fx::delayTimeL, "Time L", ui::KnobSize::secondary, "Left delay time when Sync is off.");
-    menu (delaySection, params::fx::delayDivisionR, "Div R");
-    knob (delaySection, params::fx::delayTimeR, "Time R", ui::KnobSize::secondary, "Right delay time when Sync is off.");
+    toggle (delaySection, params::fx::delaySync, "Sync", "When on, delay times follow Div L/R against host tempo.");
+    delayDivLCombo = &menu (delaySection, params::fx::delayDivisionL, "Div L", "Left delay tempo division when Sync is on.");
+    delayTimeLKnob = &knob (delaySection, params::fx::delayTimeL, "Time L", ui::KnobSize::secondary, "Left delay time when Sync is off.");
+    delayDivRCombo = &menu (delaySection, params::fx::delayDivisionR, "Div R", "Right delay tempo division when Sync is on.");
+    delayTimeRKnob = &knob (delaySection, params::fx::delayTimeR, "Time R", ui::KnobSize::secondary, "Right delay time when Sync is off.");
     knob (delaySection, params::fx::delayFeedback, "Feedback", ui::KnobSize::secondary, "Delay feedback.");
     knob (delaySection, params::fx::delayDamp, "Damp", ui::KnobSize::micro, "Delay damping.");
     knob (delaySection, params::fx::delayMix, "Mix", ui::KnobSize::secondary, "Delay mix.");
 
     motionSection.addAndMakeVisible (motionView);
-    toggle (motionSection, params::fx::chorusSync, "Sync");
-    menu (motionSection, params::fx::chorusDivision, "Div");
-    knob (motionSection, params::fx::chorusRate, "Chorus", ui::KnobSize::secondary, "Chorus free rate when Sync is off.");
+    toggle (motionSection, params::fx::chorusSync, "Sync", "When on, chorus rate follows Div against host tempo.");
+    chorusDivCombo = &menu (motionSection, params::fx::chorusDivision, "Div", "Chorus tempo division when Sync is on.");
+    chorusRateKnob = &knob (motionSection, params::fx::chorusRate, "Chorus", ui::KnobSize::secondary, "Chorus free rate when Sync is off.");
     knob (motionSection, params::fx::chorusDepth, "Depth", ui::KnobSize::micro, "Chorus depth.");
     knob (motionSection, params::fx::chorusMix, "Mix", ui::KnobSize::micro, "Chorus mix.");
-    toggle (motionSection, params::fx::phaserSync, "Sync");
-    menu (motionSection, params::fx::phaserDivision, "Div");
-    knob (motionSection, params::fx::phaserRate, "Phaser", ui::KnobSize::secondary, "Phaser free rate when Sync is off.");
+    toggle (motionSection, params::fx::phaserSync, "Sync", "When on, phaser rate follows Div against host tempo.");
+    phaserDivCombo = &menu (motionSection, params::fx::phaserDivision, "Div", "Phaser tempo division when Sync is on.");
+    phaserRateKnob = &knob (motionSection, params::fx::phaserRate, "Phaser", ui::KnobSize::secondary, "Phaser free rate when Sync is off.");
     knob (motionSection, params::fx::phaserDepth, "Depth", ui::KnobSize::micro, "Phaser depth.");
+    knob (motionSection, params::fx::phaserFeedback, "Fdbk", ui::KnobSize::micro,
+          "Phaser feedback. Higher values emphasise the notches and can push toward resonance.");
     knob (motionSection, params::fx::phaserMix, "Mix", ui::KnobSize::micro, "Phaser mix.");
 
     reverbSection.addAndMakeVisible (chamberView);
@@ -336,6 +359,76 @@ void AethrEditor::pulseLaboratory()
     randomButton.setToggleState (true, juce::dontSendNotification);
 }
 
+void AethrEditor::saveUserPreset()
+{
+    auto directory = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                         .getChildFile (branding::companyName)
+                         .getChildFile (branding::productName)
+                         .getChildFile ("UserPresets");
+    directory.createDirectory();
+
+    fileChooser = std::make_unique<juce::FileChooser> ("Save AETHR preset",
+                                                       directory.getChildFile ("Preset.aethr"),
+                                                       "*.aethr");
+
+    constexpr auto flags = juce::FileBrowserComponent::saveMode
+                         | juce::FileBrowserComponent::canSelectFiles
+                         | juce::FileBrowserComponent::warnAboutOverwriting;
+
+    fileChooser->launchAsync (flags, [this] (const juce::FileChooser& chooser)
+    {
+        auto file = chooser.getResult();
+
+        if (file == juce::File{})
+            return;
+
+        if (! file.hasFileExtension (".aethr"))
+            file = file.withFileExtension (".aethr");
+
+        if (auto xml = aethrProcessor.getValueTreeState().copyState().createXml())
+        {
+            xml->setTagName ("AETHRPreset");
+            xml->setAttribute ("product", branding::productName);
+            xml->setAttribute ("version", branding::version);
+
+            if (xml->writeTo (file))
+            {
+                headerPulse = 1.0f;
+                presetField.setText (file.getFileNameWithoutExtension(), "User");
+            }
+        }
+    });
+}
+
+void AethrEditor::updateSyncEnableState()
+{
+    auto& state = aethrProcessor.getValueTreeState();
+    const auto synced = [&state] (const char* id) -> bool
+    {
+        if (auto* parameter = state.getParameter (id))
+            return parameter->getValue() >= 0.5f;
+
+        return false;
+    };
+
+    const auto gate = [] (ui::AethrKnob* freeControl, ui::AethrCombo* syncControl, bool useSync)
+    {
+        if (freeControl != nullptr)
+            freeControl->setEnabledVisual (! useSync);
+
+        if (syncControl != nullptr)
+            syncControl->setEnabledVisual (useSync);
+    };
+
+    gate (lfo1RateKnob, lfo1DivCombo, synced (params::lfo1::sync));
+    gate (lfo2RateKnob, lfo2DivCombo, synced (params::lfo2::sync));
+    gate (chaosRateKnob, chaosDivCombo, synced (params::chaos::sync));
+    gate (delayTimeLKnob, delayDivLCombo, synced (params::fx::delaySync));
+    gate (delayTimeRKnob, delayDivRCombo, synced (params::fx::delaySync));
+    gate (chorusRateKnob, chorusDivCombo, synced (params::fx::chorusSync));
+    gate (phaserRateKnob, phaserDivCombo, synced (params::fx::phaserSync));
+}
+
 void AethrEditor::paint (juce::Graphics& g)
 {
     ui::paintChassis (g, getLocalBounds(), headerPulse);
@@ -390,14 +483,16 @@ void AethrEditor::resized()
     auto header = bounds.removeFromTop (52);
     header.removeFromLeft (248);
 
-    presetField.setBounds (header.removeFromLeft (248).reduced (4, 8));
-    laboratoryBox.setBounds (header.removeFromLeft (108).reduced (4, 12));
-    initButton.setBounds (header.removeFromLeft (52).reduced (3, 12));
-    saveButton.setBounds (header.removeFromLeft (54).reduced (3, 12));
-    randomButton.setBounds (header.removeFromLeft (62).reduced (3, 12));
-    mutateButton.setBounds (header.removeFromLeft (72).reduced (3, 12));
-    undoButton.setBounds (header.removeFromLeft (58).reduced (3, 12));
-    redoButton.setBounds (header.removeFromLeft (58).reduced (3, 12));
+    presetField.setBounds (header.removeFromLeft (230).reduced (4, 8));
+    laboratoryBox.setBounds (header.removeFromLeft (100).reduced (4, 12));
+    initButton.setBounds (header.removeFromLeft (48).reduced (2, 12));
+    saveButton.setBounds (header.removeFromLeft (50).reduced (2, 12));
+    randomButton.setBounds (header.removeFromLeft (56).reduced (2, 12));
+    mutateButton.setBounds (header.removeFromLeft (66).reduced (2, 12));
+    undoButton.setBounds (header.removeFromLeft (52).reduced (2, 12));
+    redoButton.setBounds (header.removeFromLeft (52).reduced (2, 12));
+    advancedButton.setBounds (header.removeFromLeft (46).reduced (2, 12));
+    advancedButton.setToggleState (advancedMode, juce::dontSendNotification);
 
     auto engineRow = bounds.removeFromTop (30);
     engineStrip.setBounds (engineRow.reduced (0, 2));
@@ -408,38 +503,78 @@ void AethrEditor::resized()
     bounds.removeFromTop (6);
 
     const auto h = bounds.getHeight();
-    auto row1 = bounds.removeFromTop (h * 32 / 100);
-    auto row2 = bounds.removeFromTop (h * 20 / 100);
-    auto row3 = bounds.removeFromTop (h * 25 / 100);
-    auto row4 = bounds;
+    modSection.setVisible (advancedMode);
+    motionSection.setVisible (advancedMode);
 
-    const auto split = [] (juce::Rectangle<int> row, int parts, int index, int span = 1)
+    if (advancedMode)
     {
-        const auto w = row.getWidth() / parts;
-        return juce::Rectangle<int> (row.getX() + w * index,
-                                     row.getY(),
-                                     w * span + (index + span == parts ? row.getWidth() - w * parts : 0),
-                                     row.getHeight());
-    };
+        auto row1 = bounds.removeFromTop (h * 32 / 100);
+        auto row2 = bounds.removeFromTop (h * 20 / 100);
+        auto row3 = bounds.removeFromTop (h * 25 / 100);
+        auto row4 = bounds;
 
-    {
-        const auto w = row1.getWidth();
-        exciterSection.setBounds (row1.removeFromLeft (w * 26 / 100).reduced (1));
-        resonatorSection.setBounds (row1.removeFromLeft (w * 48 / 100).reduced (1));
-        materialSection.setBounds (row1.reduced (1));
+        const auto split = [] (juce::Rectangle<int> row, int parts, int index, int span = 1)
+        {
+            const auto w = row.getWidth() / parts;
+            return juce::Rectangle<int> (row.getX() + w * index,
+                                         row.getY(),
+                                         w * span + (index + span == parts ? row.getWidth() - w * parts : 0),
+                                         row.getHeight());
+        };
+
+        {
+            const auto w = row1.getWidth();
+            exciterSection.setBounds (row1.removeFromLeft (w * 26 / 100).reduced (1));
+            resonatorSection.setBounds (row1.removeFromLeft (w * 48 / 100).reduced (1));
+            materialSection.setBounds (row1.reduced (1));
+        }
+
+        filterSection.setBounds (split (row2, 9, 0, 2).reduced (1));
+        driveSection.setBounds (split (row2, 9, 2, 2).reduced (1));
+        layerSection.setBounds (split (row2, 9, 4, 2).reduced (1));
+        macroSection.setBounds (split (row2, 9, 6, 3).reduced (1));
+
+        modSection.setBounds (split (row3, 1, 0).reduced (1));
+
+        delaySection.setBounds (split (row4, 4, 0).reduced (1));
+        motionSection.setBounds (split (row4, 4, 1).reduced (1));
+        reverbSection.setBounds (split (row4, 4, 2).reduced (1));
+        outputSection.setBounds (split (row4, 4, 3).reduced (1));
     }
+    else
+    {
+        // Performance mode: core sound path first, hide engineering modulation/motion.
+        auto row1 = bounds.removeFromTop (h * 42 / 100);
+        auto row2 = bounds.removeFromTop (h * 28 / 100);
+        auto row3 = bounds;
 
-    filterSection.setBounds (split (row2, 9, 0, 2).reduced (1));
-    driveSection.setBounds (split (row2, 9, 2, 2).reduced (1));
-    layerSection.setBounds (split (row2, 9, 4, 2).reduced (1));
-    macroSection.setBounds (split (row2, 9, 6, 3).reduced (1));
+        const auto split = [] (juce::Rectangle<int> row, int parts, int index, int span = 1)
+        {
+            const auto w = row.getWidth() / parts;
+            return juce::Rectangle<int> (row.getX() + w * index,
+                                         row.getY(),
+                                         w * span + (index + span == parts ? row.getWidth() - w * parts : 0),
+                                         row.getHeight());
+        };
 
-    modSection.setBounds (split (row3, 1, 0).reduced (1));
+        {
+            const auto w = row1.getWidth();
+            exciterSection.setBounds (row1.removeFromLeft (w * 26 / 100).reduced (1));
+            resonatorSection.setBounds (row1.removeFromLeft (w * 48 / 100).reduced (1));
+            materialSection.setBounds (row1.reduced (1));
+        }
 
-    delaySection.setBounds (split (row4, 4, 0).reduced (1));
-    motionSection.setBounds (split (row4, 4, 1).reduced (1));
-    reverbSection.setBounds (split (row4, 4, 2).reduced (1));
-    outputSection.setBounds (split (row4, 4, 3).reduced (1));
+        filterSection.setBounds (split (row2, 9, 0, 2).reduced (1));
+        driveSection.setBounds (split (row2, 9, 2, 2).reduced (1));
+        layerSection.setBounds (split (row2, 9, 4, 2).reduced (1));
+        macroSection.setBounds (split (row2, 9, 6, 3).reduced (1));
+
+        delaySection.setBounds (split (row3, 3, 0).reduced (1));
+        reverbSection.setBounds (split (row3, 3, 1).reduced (1));
+        outputSection.setBounds (split (row3, 3, 2).reduced (1));
+        motionSection.setBounds ({});
+        modSection.setBounds ({});
+    }
 
     const bool showViz = getHeight() >= 760;
 
@@ -447,7 +582,7 @@ void AethrEditor::resized()
     {
         auto area = exciterSection.content();
         auto items = childrenOf (exciterSection);
-        if (items.size() < 9)
+        if (items.size() < 10)
             return;
 
         items[0]->setVisible (showViz);
@@ -455,8 +590,8 @@ void AethrEditor::resized()
             place (items[0], area.removeFromLeft (juce::jmax (90, area.getWidth() * 28 / 100)).reduced (2));
 
         place (items[1], area.removeFromTop (34).reduced (2, 1));
-        ui::placeRow (area.removeFromTop (area.getHeight() / 2), { items[2], items[3], items[4] });
-        ui::placeRow (area, { items[5], items[6], items[7], items[8] });
+        ui::placeRow (area.removeFromTop (area.getHeight() / 2), { items[2], items[3], items[4], items[5] });
+        ui::placeRow (area, { items[6], items[7], items[8], items[9] });
     };
 
     auto layoutResonator = [&] ()
@@ -596,7 +731,7 @@ void AethrEditor::resized()
     {
         auto area = motionSection.content();
         auto items = childrenOf (motionSection);
-        if (items.size() < 11)
+        if (items.size() < 12)
             return;
 
         items[0]->setVisible (showViz);
@@ -605,7 +740,7 @@ void AethrEditor::resized()
 
         ui::placeRow (area.removeFromTop (area.getHeight() / 2),
                       { items[1], items[2], items[3], items[4], items[5] });
-        ui::placeRow (area, { items[6], items[7], items[8], items[9], items[10] });
+        ui::placeRow (area, { items[6], items[7], items[8], items[9], items[10], items[11] });
     };
 
     auto layoutChamber = [&] ()
@@ -690,6 +825,7 @@ void AethrEditor::timerCallback()
     if (headerPulse < 0.08f)
         randomButton.setToggleState (false, juce::dontSendNotification);
 
+    updateSyncEnableState();
     repaint();
 }
 

@@ -3,6 +3,8 @@
 #include <cmath>
 #include <juce_gui_basics/juce_gui_basics.h>
 
+#include "Core/Branding.h"
+
 namespace aethr::ui
 {
 
@@ -275,7 +277,7 @@ inline void drawWordmark (juce::Graphics& g, juce::Rectangle<float> bounds)
 {
     g.setColour (juce::Colour (Theme::gold));
     g.setFont (logoFont (bounds.getHeight() * 0.82f));
-    g.drawText ("AETHR", bounds, juce::Justification::centredLeft, false);
+    g.drawText (branding::productName, bounds, juce::Justification::centredLeft, false);
 
     g.setColour (juce::Colour (Theme::goldDim).withAlpha (0.8f));
     g.fillRect (bounds.getX() + 2.0f, bounds.getBottom() - 3.0f, 86.0f, 0.8f);

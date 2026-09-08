@@ -465,13 +465,27 @@ const juce::String AethrProcessor::getName() const
 
 double AethrProcessor::getTailLengthSeconds() const
 {
-    // Hosts truncate offline renders at this length, so it has to reflect the longest
-    // ring the current settings can produce, not a nominal value. Release is what
-    // governs a note the user has let go of; decay bounds it.
+    // Hosts truncate offline renders at this length, so report a conservative upper
+    // bound of every stage that can still ring after note-off.
     const auto release = readValue (handles.releaseTime, 0.25);
     const auto decay = readValue (handles.decayTime, 1.6);
+    const auto delayMix = readValue (handles.delayMix, 0.0);
+    const auto delayTime = std::max (readValue (handles.delayTimeL, 0.0),
+                                     readValue (handles.delayTimeR, 0.0));
+    const auto delayFeedback = readValue (handles.delayFeedback, 0.0) * 0.01;
+    const auto reverbMix = readValue (handles.reverbMix, 0.0);
+    const auto reverbDecay = readValue (handles.reverbDecay, 0.0) * 0.01;
+    const auto reverbSize = readValue (handles.reverbSize, 0.0) * 0.01;
 
-    return std::min (release, decay);
+    auto delayTail = 0.0;
+    if (delayMix > 1.0e-3 && delayFeedback > 1.0e-3)
+        delayTail = delayTime * (1.0 + 8.0 * delayFeedback);
+
+    auto reverbTail = 0.0;
+    if (reverbMix > 1.0e-3)
+        reverbTail = 0.4 + 6.0 * reverbDecay * (0.35 + reverbSize);
+
+    return std::max ({ decay, release, delayTail, reverbTail }) + 0.25;
 }
 
 int AethrProcessor::getSelectedPolyphony() const noexcept
@@ -526,7 +540,7 @@ void AethrProcessor::prepareToPlay (double sampleRate, int maximumExpectedSample
     voiceEngine.setSettings (buildEngineSettings());
 
     arpeggiator.prepare (sampleRate);
-    arpMidi.ensureSize (8192);
+    arpMidi.ensureSize (65536);
     arpWasEnabled = false;
     arpStep.store (0, std::memory_order_relaxed);
 

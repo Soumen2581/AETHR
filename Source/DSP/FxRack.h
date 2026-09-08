@@ -106,7 +106,7 @@ public:
         for (auto& line : reverbDelay)
             std::fill (line.begin(), line.end(), 0.0);
 
-        delayWrite = chorusWrite = combWrite = 0;
+        delayWrite = chorusWrite = combWriteL = combWriteR = 0;
         reverbWrite = 0;
         svfL = svfR = {};
         phaserL.fill (0.0);
@@ -125,8 +125,8 @@ public:
             auto l = left[i];
             auto r = right != nullptr ? right[i] : l;
 
-            l = processFilter (l, svfL);
-            r = processFilter (r, svfR);
+            l = processFilter (l, svfL, false);
+            r = processFilter (r, svfR, true);
 
             l = processSaturation (l, toneLpL);
             r = processSaturation (r, toneLpR);
@@ -151,7 +151,7 @@ public:
 private:
     struct SvfState { double ic1 { 0.0 }; double ic2 { 0.0 }; };
 
-    [[nodiscard]] double processFilter (double input, SvfState& state) noexcept
+    [[nodiscard]] double processFilter (double input, SvfState& state, bool rightChannel) noexcept
     {
         if (settings.filterMix <= 1.0e-6)
             return input;
@@ -178,15 +178,18 @@ private:
             case FilterType::notch:    filtered = input - k * v1; break;
             case FilterType::comb:
             {
-                if (combL.empty())
+                auto& buffer = rightChannel ? combR : combL;
+                auto& writeIndex = rightChannel ? combWriteR : combWriteL;
+
+                if (buffer.empty())
                     break;
 
                 const auto delay = static_cast<int> (sampleRate / std::max (40.0, settings.filterCutoffHz));
-                const auto size = static_cast<int> (combL.size());
-                const auto read = (combWrite - std::clamp (delay, 1, size - 1) + size) % size;
-                filtered = input + 0.6 * combL[static_cast<std::size_t> (read)];
-                combL[static_cast<std::size_t> (combWrite)] = guards::sanitiseState (filtered);
-                combWrite = (combWrite + 1) % size;
+                const auto size = static_cast<int> (buffer.size());
+                const auto read = (writeIndex - std::clamp (delay, 1, size - 1) + size) % size;
+                filtered = input + 0.6 * buffer[static_cast<std::size_t> (read)];
+                buffer[static_cast<std::size_t> (writeIndex)] = guards::sanitiseState (filtered);
+                writeIndex = (writeIndex + 1) % size;
                 break;
             }
             case FilterType::morph:
@@ -357,7 +360,7 @@ private:
 
     std::vector<double> delayL, delayR, chorusL, chorusR, combL, combR;
     std::array<std::vector<double>, 8> reverbDelay {};
-    int delayWrite { 0 }, chorusWrite { 0 }, combWrite { 0 }, reverbWrite { 0 };
+    int delayWrite { 0 }, chorusWrite { 0 }, combWriteL { 0 }, combWriteR { 0 }, reverbWrite { 0 };
 
     SvfState svfL, svfR;
     std::array<double, 6> phaserL {};

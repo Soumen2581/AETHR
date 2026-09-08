@@ -119,6 +119,20 @@ jobs:
             build/ci/Aethr_artefacts/RelWithDebInfo \
             "${{ matrix.verify_os }}"
 
+      - name: Pluginval (macOS VST3)
+        if: runner.os == 'macOS'
+        run: |
+          chmod +x Tools/fetch-pluginval.sh
+          ./Tools/fetch-pluginval.sh v1.0.4
+          PLUGINVAL="Tools/pluginval.app/Contents/MacOS/pluginval"
+          test -x "${PLUGINVAL}"
+          "${PLUGINVAL}" \
+            --strictness-level 8 \
+            --validate-in-process \
+            --skip-gui-tests \
+            --output-dir build/ci/pluginval \
+            "build/ci/Aethr_artefacts/RelWithDebInfo/VST3/AETHR.vst3"
+
       - name: Packaging (macOS)
         if: runner.os == 'macOS'
         run: |

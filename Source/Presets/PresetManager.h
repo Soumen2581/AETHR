@@ -28,30 +28,30 @@ inline void set (juce::AudioProcessorValueTreeState& state, const char* id, floa
 inline void init (juce::AudioProcessorValueTreeState& s)
 {
     set (s, params::exciter::type, 0.0f);
-    set (s, params::exciter::burstTime, 6.0f);
-    set (s, params::exciter::attack, 15.0f);
-    set (s, params::exciter::colour, 0.0f);
-    set (s, params::exciter::brightness, 70.0f);
-    set (s, params::exciter::level, 80.0f);
-    set (s, params::exciter::randomAmount, 0.0f);
-    set (s, params::exciter::stereoSpread, 0.0f);
+    set (s, params::exciter::burstTime, 5.0f);
+    set (s, params::exciter::attack, 12.0f);
+    set (s, params::exciter::colour, 8.0f);
+    set (s, params::exciter::brightness, 72.0f);
+    set (s, params::exciter::level, 82.0f);
+    set (s, params::exciter::randomAmount, 4.0f);
+    set (s, params::exciter::stereoSpread, 12.0f);
     set (s, params::exciter::seedLocked, 0.0f);
     set (s, params::exciter::seed, 1.0f);
 
-    set (s, params::resonator::decayTime, 1.6f);
-    set (s, params::resonator::releaseTime, 0.25f);
-    set (s, params::resonator::damping, 35.0f);
-    set (s, params::resonator::brightness, 60.0f);
-    set (s, params::resonator::stiffness, 0.0f);
+    set (s, params::resonator::decayTime, 1.85f);
+    set (s, params::resonator::releaseTime, 0.35f);
+    set (s, params::resonator::damping, 32.0f);
+    set (s, params::resonator::brightness, 62.0f);
+    set (s, params::resonator::stiffness, 4.0f);
     set (s, params::resonator::loopFilterMode, 1.0f);
     set (s, params::resonator::interpolation, 2.0f);
     set (s, params::resonator::feedback, 100.0f);
 
     set (s, params::material::type, 0.0f);
-    set (s, params::body::preset, 0.0f);
+    set (s, params::body::preset, 1.0f); // wood — subtle body presence
     set (s, params::body::modes, 2.0f);
-    set (s, params::body::mix, 0.0f);
-    set (s, params::body::decay, 40.0f);
+    set (s, params::body::mix, 12.0f);
+    set (s, params::body::decay, 42.0f);
     set (s, params::body::brightness, 55.0f);
 
     set (s, params::layer::bEnable, 0.0f);
@@ -119,11 +119,11 @@ inline void init (juce::AudioProcessorValueTreeState& s)
     set (s, params::fx::phaserDepth, 50.0f);
     set (s, params::fx::phaserFeedback, 25.0f);
     set (s, params::fx::phaserMix, 0.0f);
-    set (s, params::fx::reverbSize, 55.0f);
-    set (s, params::fx::reverbDecay, 45.0f);
-    set (s, params::fx::reverbDamp, 40.0f);
-    set (s, params::fx::reverbWidth, 80.0f);
-    set (s, params::fx::reverbMix, 0.0f);
+    set (s, params::fx::reverbSize, 48.0f);
+    set (s, params::fx::reverbDecay, 38.0f);
+    set (s, params::fx::reverbDamp, 42.0f);
+    set (s, params::fx::reverbWidth, 78.0f);
+    set (s, params::fx::reverbMix, 10.0f);
 
     set (s, params::output::gain, 0.0f);
     set (s, params::output::ceiling, 0.98f);
@@ -284,6 +284,11 @@ inline void applyFactory (juce::AudioProcessorValueTreeState& state, int index)
     if (index < 0 || index >= numFactoryPresets())
         return;
 
+    // Always start from a known-clean Init snapshot so factory patches cannot
+    // leak Layer B / FX / chaos from the previously loaded sound.
+    if (index != 0)
+        init (state);
+
     factory[static_cast<std::size_t> (index)].apply (state);
 }
 
@@ -301,7 +306,16 @@ inline void randomize (juce::AudioProcessorValueTreeState& state, RandomMode mod
             break;
         case RandomMode::musical:
             params::applyMaterialToState (state, rng.nextInt (params::numMaterials));
-            set (state, params::fx::reverbMix, range (5.0f, 30.0f));
+            set (state, params::engine::type, static_cast<float> (rng.nextInt (8))); // physical family
+            set (state, params::resonator::decayTime, range (0.8f, 4.5f));
+            set (state, params::resonator::damping, range (18.0f, 50.0f));
+            set (state, params::resonator::brightness, range (45.0f, 78.0f));
+            set (state, params::body::mix, range (0.0f, 28.0f));
+            set (state, params::fx::reverbMix, range (6.0f, 28.0f));
+            set (state, params::fx::delayMix, range (0.0f, 18.0f));
+            set (state, params::fx::satMix, 0.0f);
+            set (state, params::chaos::amount, 0.0f);
+            set (state, params::layer::bEnable, 0.0f);
             break;
         case RandomMode::experimental:
             params::applyMaterialToState (state, rng.nextInt (params::numMaterials));

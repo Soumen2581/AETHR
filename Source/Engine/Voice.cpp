@@ -37,9 +37,26 @@ void Voice::kill() noexcept
 
 void Voice::applySettings (const Settings& settings) noexcept
 {
+    const auto previousType = currentSettings.engineType;
     currentSettings = settings;
     stringEngine.applySettings (settings, noteNumber, pitchOffsetSemitones, held);
     modalEngine.applySettings (settings, noteNumber, pitchOffsetSemitones, held);
+
+    // Mid-note engine-family changes leave the dormant core frozen after noteOn.
+    // Retrigger both cores so the newly selected path starts cleanly without a
+    // clicky jump into stale excitation state.
+    if (active
+        && (usesModalCore (previousType) != usesModalCore (settings.engineType)
+            || usesHybridCore (previousType) != usesHybridCore (settings.engineType)))
+    {
+        const auto seed = static_cast<std::uint32_t> (noteNumber) * 2654435761u + 1u;
+        stringEngine.kill();
+        modalEngine.kill();
+        stringEngine.noteOn (noteNumber, 0.85, seed, settings, pitchOffsetSemitones);
+        modalEngine.noteOn (noteNumber, 0.85, seed ^ 0x9E3779B9u, settings, pitchOffsetSemitones);
+        held = true;
+        keyDown = true;
+    }
 }
 
 void Voice::noteOn (int midiNoteNumber, double velocity, std::uint32_t seed, const Settings& settings) noexcept

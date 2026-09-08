@@ -17,10 +17,14 @@ Company: **ixmuk**. CI builds and tests both platforms on every push
 **Install:** see **[docs/INSTALL.md](docs/INSTALL.md)** for macOS and Windows
 (CI artefacts, folder paths, DAW tips).
 
-AETHR is an experimental synthesis lab: thirteen engines in one chassis — strings,
-plucks, bows, bells, plates, membranes, tubes, cavities, waveguides, modal banks,
-granular bursts, spectral clouds, and hybrid string→body coupling — plus a
-tempo-synced arpeggiator / 16-step sequencer.
+AETHR is an experimental synthesis lab: thirteen selectable engines in one chassis —
+physical (string through cavity), synthetic (waveguide / modal / spectral), and
+experimental (granular / hybrid) — sharing Karplus–Strong and modal cores with
+per-engine character, plus a tempo-synced arpeggiator / 16-step sequencer.
+
+See [`docs/ENGINE_REFERENCE.md`](docs/ENGINE_REFERENCE.md) for what each engine
+actually does (character models on two cores, not thirteen unrelated physics
+simulators).
 
 ![AETHR editor — String engine](docs/images/aethr-editor.jpg)
 
@@ -71,6 +75,7 @@ clean settings). Other engines are distinct character models — see
 |----------|----------|
 | **[INSTALL.md](docs/INSTALL.md)** | **How to install on macOS and Windows** |
 | **[CI.md](docs/CI.md)** | **GitHub Actions, local≈CI, releases, artefacts** |
+| **[FINAL_POLISH_AUDIT.md](docs/FINAL_POLISH_AUDIT.md)** | Final polish issue ranking |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Toolchain, signal flow, threading, parameters |
 | [DSP_ARCHITECTURE.md](docs/DSP_ARCHITECTURE.md) | Multi-engine contract and realtime rules |
 | [DSP_NOTES.md](docs/DSP_NOTES.md) | Loop tuning, filters, decay, dispersion maths |

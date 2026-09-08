@@ -5,6 +5,7 @@
 
 #include "Parameters/ParameterIDs.h"
 #include "PluginProcessor.h"
+#include "Presets/PresetManager.h"
 
 using Catch::Approx;
 
@@ -206,4 +207,24 @@ TEST_CASE ("Malformed or foreign state is rejected without changing current valu
 
     const auto valueAfter = processor.getValueTreeState().getRawParameterValue (aethr::params::output::gain)->load();
     REQUIRE (valueAfter == Approx (valueBefore));
+}
+
+TEST_CASE ("Factory presets start from Init so earlier patches do not leak", "[parameters][presets]")
+{
+    aethr::AethrProcessor processor;
+    auto& state = processor.getValueTreeState();
+
+    aethr::presets::applyFactory (state, 10); // Psychedelic — enables Layer B / chaos / phaser
+
+    REQUIRE (state.getRawParameterValue (aethr::params::layer::bEnable)->load()
+             == Catch::Approx (1.0f).margin (0.05f));
+
+    aethr::presets::applyFactory (state, 2); // Nylon — must not keep Layer B / chaos
+
+    REQUIRE (state.getRawParameterValue (aethr::params::layer::bEnable)->load()
+             == Catch::Approx (0.0f).margin (0.05f));
+    REQUIRE (state.getRawParameterValue (aethr::params::chaos::amount)->load()
+             == Catch::Approx (0.0f).margin (0.05f));
+    REQUIRE (state.getRawParameterValue (aethr::params::fx::phaserMix)->load()
+             == Catch::Approx (0.0f).margin (0.05f));
 }
