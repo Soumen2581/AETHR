@@ -14,9 +14,18 @@ namespace
     constexpr std::uint32_t counterMultiplier = 2246822519u;
 }
 
+VoiceEngine::VoiceEngine()
+    : voices (std::make_unique<VoicePool>())
+{
+}
+
+VoiceEngine::~VoiceEngine() = default;
+VoiceEngine::VoiceEngine (VoiceEngine&&) noexcept = default;
+VoiceEngine& VoiceEngine::operator= (VoiceEngine&&) noexcept = default;
+
 void VoiceEngine::prepare (double sampleRate)
 {
-    for (auto& voice : voices)
+    for (auto& voice : *voices)
         voice.prepare (sampleRate);
 
     startOrderCounter = 0;
@@ -25,7 +34,7 @@ void VoiceEngine::prepare (double sampleRate)
 
 void VoiceEngine::reset() noexcept
 {
-    for (auto& voice : voices)
+    for (auto& voice : *voices)
         voice.reset();
 
     pitchBendSemitones = 0.0;
@@ -37,7 +46,7 @@ void VoiceEngine::setSettings (const Settings& newSettings) noexcept
 
     // Only sounding voices need updating; an idle voice will pick the settings up when
     // it is next started, and touching it here would waste transcendental maths per block.
-    for (auto& voice : voices)
+    for (auto& voice : *voices)
         if (voice.isActive())
             voice.applySettings (settings);
 }
@@ -69,7 +78,7 @@ Voice* VoiceEngine::findVoiceToUse (int midiNoteNumber) noexcept
     // trill from eating the whole pool.
     for (int i = 0; i < limit; ++i)
     {
-        auto& voice = voices[static_cast<std::size_t> (i)];
+        auto& voice = (*voices)[static_cast<std::size_t> (i)];
 
         if (voice.isActive() && voice.isHeld() && voice.getNoteNumber() == midiNoteNumber)
             return &voice;
@@ -77,7 +86,7 @@ Voice* VoiceEngine::findVoiceToUse (int midiNoteNumber) noexcept
 
     for (int i = 0; i < limit; ++i)
     {
-        auto& voice = voices[static_cast<std::size_t> (i)];
+        auto& voice = (*voices)[static_cast<std::size_t> (i)];
 
         if (! voice.isActive())
             return &voice;
@@ -91,7 +100,7 @@ Voice* VoiceEngine::findVoiceToUse (int midiNoteNumber) noexcept
 
     for (int i = 0; i < limit; ++i)
     {
-        auto& voice = voices[static_cast<std::size_t> (i)];
+        auto& voice = (*voices)[static_cast<std::size_t> (i)];
         const auto order = voice.getStartOrder();
 
         if (! voice.isHeld() && order < oldestReleasedOrder)
@@ -125,7 +134,7 @@ void VoiceEngine::noteOn (int midiNoteNumber, double velocity) noexcept
 
 void VoiceEngine::noteOff (int midiNoteNumber) noexcept
 {
-    for (auto& voice : voices)
+    for (auto& voice : *voices)
     {
         if (! (voice.isActive() && voice.getNoteNumber() == midiNoteNumber && voice.isKeyDown()))
             continue;
@@ -144,14 +153,14 @@ void VoiceEngine::setSustainPedal (bool down) noexcept
     if (down)
         return;
 
-    for (auto& voice : voices)
+    for (auto& voice : *voices)
         if (voice.isActive() && ! voice.isKeyDown())
             voice.noteOff();
 }
 
 void VoiceEngine::allNotesOff (bool allowTailOff) noexcept
 {
-    for (auto& voice : voices)
+    for (auto& voice : *voices)
     {
         if (! voice.isActive())
             continue;
@@ -167,7 +176,7 @@ void VoiceEngine::setPitchBendSemitones (double semitones) noexcept
 {
     pitchBendSemitones = semitones;
 
-    for (auto& voice : voices)
+    for (auto& voice : *voices)
         if (voice.isActive())
             voice.setPitchOffsetSemitones (semitones);
 }
@@ -175,7 +184,7 @@ void VoiceEngine::setPitchBendSemitones (double semitones) noexcept
 //==============================================================================
 void VoiceEngine::renderAdding (double* left, double* right, int numSamples) noexcept
 {
-    for (auto& voice : voices)
+    for (auto& voice : *voices)
         if (voice.isActive())
             voice.renderAdding (left, right, numSamples);
 }
@@ -184,7 +193,7 @@ int VoiceEngine::getActiveVoiceCount() const noexcept
 {
     auto count = 0;
 
-    for (const auto& voice : voices)
+    for (const auto& voice : *voices)
         if (voice.isActive())
             ++count;
 
@@ -193,7 +202,7 @@ int VoiceEngine::getActiveVoiceCount() const noexcept
 
 const Voice* VoiceEngine::getVoicePlayingNote (int midiNoteNumber) const noexcept
 {
-    for (const auto& voice : voices)
+    for (const auto& voice : *voices)
         if (voice.isActive() && voice.getNoteNumber() == midiNoteNumber)
             return &voice;
 

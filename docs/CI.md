@@ -61,6 +61,8 @@ On **macOS**, CI downloads pinned **pluginval 1.0.4** via `Tools/fetch-pluginval
 
 **Limitation:** pluginval is not run on Windows CI yet (same binary is available, but the macOS path is the validated one historically). Windows still builds VST3, runs the full unit suite, and verifies the `.vst3` folder + Standalone `.exe` exist.
 
+The 64-voice pool is heap-allocated inside `VoiceEngine` so constructing `AethrProcessor` on the default Windows thread stack (used by Catch2) does not overflow. The test binary also requests an 8 MiB stack on MSVC as a safety margin.
+
 ## Artefacts
 
 Successful CI uploads:

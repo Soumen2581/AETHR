@@ -45,6 +45,13 @@ target_link_libraries(AethrTests
         Aethr
         Catch2::Catch2WithMain)
 
+# Catch2 runs each TEST_CASE in the default thread. On MSVC that stack is only
+# ~1 MiB; AethrProcessor still embeds large APVTS / FX state, so give the test
+# binary headroom even after the voice pool moved to the heap.
+if(MSVC)
+    target_link_options(AethrTests PRIVATE "/STACK:8388608")
+endif()
+
 # JUCE_STANDALONE_APPLICATION is already defined by the shared-code target (as
 # JucePlugin_Build_Standalone) and propagates here, so it must not be set again.
 target_compile_definitions(AethrTests PRIVATE JUCE_UNIT_TESTS=1)

@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 
 #include "Engine/Voice.h"
 
@@ -13,12 +14,24 @@ namespace aethr::engine
 
     Allocation is first idle voice, otherwise steal the oldest that is no longer held.
     Inactive layer-B and body paths are skipped so unused DSP is not paid for.
+
+    The 64-voice pool lives on the heap: each Voice embeds dual Karplus / modal
+    state that is far too large for the default Windows thread stack used by tests
+    and some hosts when constructing the processor as an automatic variable.
 */
 class VoiceEngine
 {
 public:
     /** Interim voice ceiling. Phase 8 raises this and honours the full polyphony parameter. */
     static constexpr int maximumVoices = 64;
+
+    VoiceEngine();
+    ~VoiceEngine();
+
+    VoiceEngine (const VoiceEngine&) = delete;
+    VoiceEngine& operator= (const VoiceEngine&) = delete;
+    VoiceEngine (VoiceEngine&&) noexcept;
+    VoiceEngine& operator= (VoiceEngine&&) noexcept;
 
     //==============================================================================
     void prepare (double sampleRate);
@@ -53,7 +66,8 @@ private:
     [[nodiscard]] std::uint32_t seedForNote (int midiNoteNumber) noexcept;
     [[nodiscard]] int getVoiceLimit() const noexcept;
 
-    std::array<Voice, static_cast<std::size_t> (maximumVoices)> voices;
+    using VoicePool = std::array<Voice, static_cast<std::size_t> (maximumVoices)>;
+    std::unique_ptr<VoicePool> voices;
 
     Settings settings;
     double pitchBendSemitones { 0.0 };
