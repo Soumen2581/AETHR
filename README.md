@@ -12,6 +12,9 @@ Formats:
 
 Company: **ixmuk**. CI builds both platforms on every push.
 
+**Install:** see **[docs/INSTALL.md](docs/INSTALL.md)** for macOS and Windows
+(CI artefacts, folder paths, DAW tips).
+
 AETHR is an experimental synthesis lab: thirteen engines in one chassis — strings,
 plucks, bows, bells, plates, membranes, tubes, cavities, waveguides, modal banks,
 granular bursts, spectral clouds, and hybrid string→body coupling — plus a
@@ -62,12 +65,13 @@ clean settings). Other engines are distinct character models — see
 
 | Document | Contents |
 |----------|----------|
+| **[INSTALL.md](docs/INSTALL.md)** | **How to install on macOS and Windows** |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Toolchain, signal flow, threading, parameters |
 | [DSP_ARCHITECTURE.md](docs/DSP_ARCHITECTURE.md) | Multi-engine contract and realtime rules |
 | [DSP_NOTES.md](docs/DSP_NOTES.md) | Loop tuning, filters, decay, dispersion maths |
 | [ENGINE_REFERENCE.md](docs/ENGINE_REFERENCE.md) | Per-engine cores, controls, arp IDs |
 | [PHYSICAL_MODELS.md](docs/PHYSICAL_MODELS.md) | Model notes |
-| [BUILD.md](docs/BUILD.md) | Presets, options, macOS packaging |
+| [BUILD.md](docs/BUILD.md) | Presets, options, packaging |
 | [TESTING.md](docs/TESTING.md) | Coverage and methodology |
 | [ROADMAP.md](docs/ROADMAP.md) | Phase history and next gates |
 | [RISKS.md](docs/RISKS.md) | Risk register |
