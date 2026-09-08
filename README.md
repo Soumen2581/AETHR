@@ -22,6 +22,8 @@ plucks, bows, bells, plates, membranes, tubes, cavities, waveguides, modal banks
 granular bursts, spectral clouds, and hybrid string→body coupling — plus a
 tempo-synced arpeggiator / 16-step sequencer.
 
+![AETHR editor — String engine](docs/images/aethr-editor.jpg)
+
 ## Repository layout
 
 ```
@@ -35,7 +37,7 @@ Source/
 Tests/          Catch2 suite (pitch, DSP, processor, engines)
 Tools/          macOS sanitise + pluginval fetch helpers
 cmake/          First-party warning policy
-docs/           Architecture, DSP, engines, build, roadmap
+docs/           Architecture, DSP, engines, build, roadmap, UI screenshot
 External/       JUCE / Catch2 (fetched at configure — not committed)
 build/          Local build output (ignored)
 ```
