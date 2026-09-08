@@ -483,6 +483,102 @@ TEST_CASE ("Switching engines mid-session stays finite and responds to notes", "
     }
 }
 
+TEST_CASE ("Switching engines while a note is held stays finite without reset", "[engine][architecture][regression]")
+{
+    AethrProcessor processor;
+    testing::applyTuningTestSettings (processor);
+    auto* engineParam = processor.getValueTreeState().getParameter (params::engine::type);
+    REQUIRE (engineParam != nullptr);
+
+    processor.prepareToPlay (sampleRate, blockSize);
+    juce::AudioBuffer<float> buffer (2, blockSize);
+
+    {
+        juce::MidiBuffer noteOn;
+        noteOn.addEvent (juce::MidiMessage::noteOn (1, 60, 0.95f), 0);
+        buffer.clear();
+        processor.processBlock (buffer, noteOn);
+    }
+
+    auto peak = 0.0f;
+
+    for (int index = 0; index < engine::numEngineTypes; ++index)
+    {
+        engineParam->setValueNotifyingHost (engineParam->convertTo0to1 (static_cast<float> (index)));
+
+        for (int block = 0; block < 6; ++block)
+        {
+            juce::MidiBuffer empty;
+            buffer.clear();
+            processor.processBlock (buffer, empty);
+            const auto blockPeak = buffer.getMagnitude (0, blockSize);
+            REQUIRE (std::isfinite (blockPeak));
+            peak = std::max (peak, blockPeak);
+
+            for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+                for (int i = 0; i < buffer.getNumSamples(); ++i)
+                    REQUIRE (std::isfinite (buffer.getSample (ch, i)));
+        }
+    }
+
+    CAPTURE (peak);
+    REQUIRE (peak > 1.0e-5f);
+}
+
+TEST_CASE ("Hard saturation modes stay finite at high drive", "[engine][stability][fx]")
+{
+    AethrProcessor processor;
+    testing::applyTuningTestSettings (processor);
+    auto& state = processor.getValueTreeState();
+
+    testing::setParameter (processor, params::fx::satMode, 6.0f); // hard clip
+    testing::setParameter (processor, params::fx::satDrive, 100.0f);
+    testing::setParameter (processor, params::fx::satMix, 100.0f);
+    testing::setParameter (processor, params::fx::filterMix, 0.0f);
+
+    processor.prepareToPlay (sampleRate, blockSize);
+    juce::AudioBuffer<float> buffer (2, blockSize);
+    juce::MidiBuffer midi;
+    midi.addEvent (juce::MidiMessage::noteOn (1, 48, 1.0f), 0);
+
+    for (int block = 0; block < 16; ++block)
+    {
+        buffer.clear();
+        juce::MidiBuffer incoming;
+
+        if (block == 0)
+            incoming = midi;
+
+        processor.processBlock (buffer, incoming);
+
+        for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+            for (int i = 0; i < buffer.getNumSamples(); ++i)
+                REQUIRE (std::isfinite (buffer.getSample (ch, i)));
+    }
+
+    // Wavefold mode
+    testing::setParameter (processor, params::fx::satMode, 4.0f);
+    midi.clear();
+    midi.addEvent (juce::MidiMessage::noteOn (1, 55, 1.0f), 0);
+
+    for (int block = 0; block < 16; ++block)
+    {
+        buffer.clear();
+        juce::MidiBuffer incoming;
+
+        if (block == 0)
+            incoming = midi;
+
+        processor.processBlock (buffer, incoming);
+
+        for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
+            for (int i = 0; i < buffer.getNumSamples(); ++i)
+                REQUIRE (std::isfinite (buffer.getSample (ch, i)));
+    }
+
+    juce::ignoreUnused (state);
+}
+
 TEST_CASE ("Extreme resonator settings stay finite across engines", "[engine][stability][regression]")
 {
     AethrProcessor processor;

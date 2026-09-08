@@ -19,13 +19,22 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 
 | Field | Value |
 |-------|--------|
-| **Sprint** | 2 |
-| **Name** | AETHR Visual System |
-| **Goal** | Premium visual honesty and efficiency without a UI rewrite — scoped repaints, truthful Resonance Core labels, category preset browser, basic accessibility |
+| **Sprint** | 3 |
+| **Name** | AETHR Sound Quality |
+| **Goal** | Tighten DSP CPU contracts and prove mid-note engine switching is safe without weakening pitch/stability tests |
 | **Dates** | 2026-09-08 → 2026-09-15 |
 | **Branch policy** | Prefer `fix/*` / `feature/*`; small focused commits on `master` only when risk is low and CI is green |
 
-### Sprint 2 stories
+### Sprint 3 stories
+
+| ID | Story | Priority | Status |
+|----|-------|----------|--------|
+| S3-1 | Held-note engine-switch regression (no reset) | P1 | DONE |
+| S3-2 | Filter coeffs per-block, not per-sample | P2 | DONE |
+| S3-3 | Separate chorus / phaser LFO phases | P2 | DONE |
+| S3-4 | Soft-sat default honesty + finite hard modes | P2 | DONE |
+
+### Sprint 2 stories (complete)
 
 | ID | Story | Priority | Status |
 |----|-------|----------|--------|
@@ -67,9 +76,8 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | B-1 | Tail length uses max not min | P0 | DONE | Polish |
 | B-2 | Synced delay in tail length | P1 | DONE | Sprint 1 |
 | B-3 | Delay time crossfade | P1 | DONE | Sprint 1 |
-| B-4 | Filter coeffs per-block not per-sample | P2 | TODO | CPU |
-| B-5 | Saturation oversampling | P2 | TODO | Accepted residual R5 |
-| B-6 | Separate chorus/phaser LFO phase | P2 | TODO | |
+| B-4 | Filter coeffs per-block not per-sample | P2 | DONE | Sprint 3 |
+| B-6 | Separate chorus/phaser LFO phase | P2 | DONE | Sprint 3 |
 | B-7 | Stereo comb filter | P1 | DONE | Polish |
 | B-8 | Arp MidiBuffer capacity | P0 | DONE | 64 KiB |
 
@@ -78,8 +86,8 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | ID | Item | P | Status | Notes |
 |----|------|---|--------|-------|
 | C-1 | Mid-note engine-family retrigger | P0 | DONE | `Voice.cpp` |
-| C-2 | Held-note switch regression test (no reset) | P1 | TODO | Extend EngineTests |
-| C-3 | Per-engine character audit (13 engines) | P2 | TODO | Sprint 3 |
+| C-2 | Held-note switch regression test (no reset) | P1 | DONE | Sprint 3 |
+| C-3 | Per-engine character audit (13 engines) | P2 | DONE | ENGINE_REFERENCE Sprint 3 notes |
 | C-4 | Physics depth honesty in docs | P1 | DONE | README + ENGINE_REFERENCE |
 
 ### EPIC D — UI/UX

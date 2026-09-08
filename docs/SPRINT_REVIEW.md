@@ -1,28 +1,22 @@
-# Sprint Review — Sprint 2
+# Sprint Review — Sprint 3
 
-**Sprint:** AETHR Visual System  
+**Sprint:** AETHR Sound Quality  
 **Date:** 2026-09-08  
-**Goal:** Premium visual honesty and efficiency without a UI rewrite.
+**Goal:** Tighten DSP CPU contracts and prove mid-note engine switching is safe.
 
 ## Completed
 
 | Story | Result |
 |-------|--------|
-| S2-1 Scoped repaints | Telemetry views repaint every tick; full chrome ~6 Hz / on change |
-| S2-2 Honest labeling | Resonator footer `STATUS ART`; matrix `ROUTING OVERVIEW` + read-only note |
-| S2-3 Category browser | Factory list grouped by category headers |
-| S2-4 Accessibility | Titles on editor/actions; Esc closes library |
-| S2-5 Engine tooltips | Family · name with core explanation |
-
-## Not completed
-
-- Real audio-scope Resonance Core (deferred — would be Sprint 2++ / Sprint 3 adjacent)
-- Full AccessibilityHandler for custom hit zones
+| S3-1 Held-note switch | New Catch2 case without `processor.reset()` |
+| S3-2 Filter coeffs | SVF `tan`/coeff update once per settings change / block |
+| S3-3 Motion LFOs | Independent `chorusLfoPhase` / `phaserLfoPhase` |
+| S3-4 Soft sat honesty | Default Soft documented; hard/fold finite test |
 
 ## Test results
 
-Local: `ctest --preset ci` — full suite green after Sprint 2 build.
+Local: **82/82** via `ctest --preset ci`.
 
 ## Next sprint recommendation
 
-**Sprint 3 — Sound Quality:** held-note engine-switch test, per-engine character audit, filter block-rate coeffs, optional soft-sat defaults.
+**Sprint 4 — Workflow:** expand factory bank toward curated categories, MIDI polish if needed, favorites optional — stay feature-light.

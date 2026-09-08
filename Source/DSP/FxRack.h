@@ -116,15 +116,24 @@ public:
         svfL = svfR = {};
         phaserL.fill (0.0);
         phaserR.fill (0.0);
-        lfoPhase = 0.0;
+        chorusLfoPhase = 0.0;
+        phaserLfoPhase = 0.25; // quadrature-ish start so motion FX don't lock
+        filterCoeffsDirty = true;
         toneLpL = toneLpR = 0.0;
         delayLpL = delayLpR = 0.0;
     }
 
-    void setSettings (const Settings& newSettings) noexcept { settings = newSettings; }
+    void setSettings (const Settings& newSettings) noexcept
+    {
+        settings = newSettings;
+        filterCoeffsDirty = true;
+    }
 
     void process (double* left, double* right, int numSamples) noexcept
     {
+        if (settings.filterMix > 1.0e-6 && filterCoeffsDirty)
+            updateFilterCoeffs();
+
         for (int i = 0; i < numSamples; ++i)
         {
             auto l = left[i];
@@ -156,20 +165,25 @@ public:
 private:
     struct SvfState { double ic1 { 0.0 }; double ic2 { 0.0 }; };
 
+    void updateFilterCoeffs() noexcept
+    {
+        filterG = std::tan (math::pi * std::clamp (settings.filterCutoffHz, 20.0, sampleRate * 0.45) / sampleRate);
+        filterK = 2.0 - 1.9 * settings.filterResonance;
+        filterA1 = 1.0 / (1.0 + filterG * (filterG + filterK));
+        filterA2 = filterG * filterA1;
+        filterA3 = filterG * filterA2;
+        combDelaySamples = static_cast<int> (sampleRate / std::max (40.0, settings.filterCutoffHz));
+        filterCoeffsDirty = false;
+    }
+
     [[nodiscard]] double processFilter (double input, SvfState& state, bool rightChannel) noexcept
     {
         if (settings.filterMix <= 1.0e-6)
             return input;
 
-        const auto g = std::tan (math::pi * std::clamp (settings.filterCutoffHz, 20.0, sampleRate * 0.45) / sampleRate);
-        const auto k = 2.0 - 1.9 * settings.filterResonance;
-        const auto a1 = 1.0 / (1.0 + g * (g + k));
-        const auto a2 = g * a1;
-        const auto a3 = g * a2;
-
         const auto v3 = input - state.ic2;
-        const auto v1 = a1 * state.ic1 + a2 * v3;
-        const auto v2 = state.ic2 + a2 * state.ic1 + a3 * v3;
+        const auto v1 = filterA1 * state.ic1 + filterA2 * v3;
+        const auto v2 = state.ic2 + filterA2 * state.ic1 + filterA3 * v3;
         state.ic1 = 2.0 * v1 - state.ic1;
         state.ic2 = 2.0 * v2 - state.ic2;
 
@@ -178,9 +192,9 @@ private:
         switch (settings.filterType)
         {
             case FilterType::lowpass:  filtered = v2; break;
-            case FilterType::highpass: filtered = input - k * v1 - v2; break;
+            case FilterType::highpass: filtered = input - filterK * v1 - v2; break;
             case FilterType::bandpass: filtered = v1; break;
-            case FilterType::notch:    filtered = input - k * v1; break;
+            case FilterType::notch:    filtered = input - filterK * v1; break;
             case FilterType::comb:
             {
                 auto& buffer = rightChannel ? combR : combL;
@@ -189,9 +203,8 @@ private:
                 if (buffer.empty())
                     break;
 
-                const auto delay = static_cast<int> (sampleRate / std::max (40.0, settings.filterCutoffHz));
                 const auto size = static_cast<int> (buffer.size());
-                const auto read = (writeIndex - std::clamp (delay, 1, size - 1) + size) % size;
+                const auto read = (writeIndex - std::clamp (combDelaySamples, 1, size - 1) + size) % size;
                 filtered = input + 0.6 * buffer[static_cast<std::size_t> (read)];
                 buffer[static_cast<std::size_t> (writeIndex)] = guards::sanitiseState (filtered);
                 writeIndex = (writeIndex + 1) % size;
@@ -298,12 +311,12 @@ private:
             return;
 
         const auto size = static_cast<int> (chorusL.size());
-        lfoPhase += settings.chorusRate / sampleRate;
+        chorusLfoPhase += settings.chorusRate / sampleRate;
 
-        if (lfoPhase >= 1.0)
-            lfoPhase -= 1.0;
+        if (chorusLfoPhase >= 1.0)
+            chorusLfoPhase -= 1.0;
 
-        const auto mod = std::sin (math::twoPi * lfoPhase) * settings.chorusDepth * 12.0 + 18.0;
+        const auto mod = std::sin (math::twoPi * chorusLfoPhase) * settings.chorusDepth * 12.0 + 18.0;
         const auto delay = std::clamp (static_cast<int> (mod), 1, size - 2);
         const auto read = (chorusWrite - delay + size) % size;
 
@@ -320,12 +333,12 @@ private:
         if (settings.phaserMix <= 1.0e-6)
             return;
 
-        lfoPhase += settings.phaserRate / sampleRate;
+        phaserLfoPhase += settings.phaserRate / sampleRate;
 
-        if (lfoPhase >= 1.0)
-            lfoPhase -= 1.0;
+        if (phaserLfoPhase >= 1.0)
+            phaserLfoPhase -= 1.0;
 
-        const auto coeff = 0.3 + 0.6 * (0.5 + 0.5 * std::sin (math::twoPi * lfoPhase)) * settings.phaserDepth;
+        const auto coeff = 0.3 + 0.6 * (0.5 + 0.5 * std::sin (math::twoPi * phaserLfoPhase)) * settings.phaserDepth;
 
         auto processAllpass = [coeff] (double input, std::array<double, 6>& state) noexcept
         {
@@ -405,9 +418,13 @@ private:
     SvfState svfL, svfR;
     std::array<double, 6> phaserL {};
     std::array<double, 6> phaserR {};
-    double lfoPhase { 0.0 };
+    double chorusLfoPhase { 0.0 };
+    double phaserLfoPhase { 0.25 };
     double toneLpL { 0.0 }, toneLpR { 0.0 };
     double delayLpL { 0.0 }, delayLpR { 0.0 };
+    double filterG { 0.0 }, filterK { 0.0 }, filterA1 { 0.0 }, filterA2 { 0.0 }, filterA3 { 0.0 };
+    int combDelaySamples { 1 };
+    bool filterCoeffsDirty { true };
 };
 
 } // namespace aethr::dsp

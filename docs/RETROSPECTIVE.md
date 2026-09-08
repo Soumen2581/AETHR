@@ -1,23 +1,19 @@
-# Retrospective — Sprint 2
+# Retrospective — Sprint 3
 
 ## What went well?
 
-- Kept scope to honesty + efficiency; no UI rewrite
-- Category browser is a small high-value workflow win
-- Scoped repaint is measurable against TD-2
+- Regression-first held-note switch test before claiming engine safety
+- Filter coeff caching is a clean CPU win with no API change
+- Soft sat was already the layout default — documentation + hard-mode finite test closed the honesty gap
 
 ## What went poorly?
 
-- `setTooltip` requires `SettableTooltipClient` — caught at compile time
-
-## What should change?
-
-- Prefer inheriting `SettableTooltipClient` when adding tooltips to custom components
+Nothing blocking.
 
 ## Continue doing
 
-- Label decorative visuals as status art rather than implying analyzers
+- Extend engine tests without `reset()` when testing live parameter changes
 
 ## Next
 
-Sprint 3 sound quality; leave layout magic indices (TD-1) unless it blocks work.
+Sprint 4 workflow — curated presets over new DSP toys.

@@ -23,6 +23,15 @@ Shared resonator knobs (decay, damping, bright, feedback, stiffness) still apply
 every engine. The four engine knobs in the Resonator panel rename with the selected
 engine — they are the “how to play this model” controls.
 
+## Sound-quality notes (Sprint 3)
+
+- Mid-note engine-family changes re-trigger the active core (`Voice::applySettings`) —
+  verified without `processor.reset()` in Catch2.
+- FX filter SVF coefficients update once per block (or when settings change), not every sample.
+- Chorus and phaser use independent LFO phases so wet Motion FX do not lock together.
+- Factory / Init saturation defaults to **Soft**. Hard clip and wavefold remain available
+  and stay finite under high drive, but may alias (no oversampling yet — see RISKS R5).
+
 ## STRING
 
 **Class:** `aethr::engine::KarplusStringEngine`  
