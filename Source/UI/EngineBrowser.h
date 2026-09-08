@@ -21,6 +21,7 @@ namespace aethr::ui
     spectral/modal, and a hybrid of both.
 */
 class AethrEngineStrip : public juce::Component,
+                         public juce::SettableTooltipClient,
                          private juce::AudioProcessorValueTreeState::Listener
 {
 public:
@@ -28,8 +29,11 @@ public:
         : state (stateToUse)
     {
         setOpaque (false);
+        setTitle ("Engine selector");
+        setDescription ("Choose a synthesis engine. Physical, synthetic, and experimental families.");
         state.addParameterListener (params::engine::type, this);
         selected = currentIndex();
+        updateTooltip();
     }
 
     ~AethrEngineStrip() override
@@ -119,7 +123,22 @@ private:
     void parameterChanged (const juce::String&, float) override
     {
         selected = currentIndex();
+        updateTooltip();
         repaint();
+    }
+
+    void updateTooltip()
+    {
+        const auto& info = engine::infoFor (engine::engineTypeFromIndex (selected));
+        const char* family = "Physical";
+
+        if (info.family == engine::EngineFamily::synthetic)
+            family = "Synthetic";
+        else if (info.family == engine::EngineFamily::experimental)
+            family = "Experimental";
+
+        setTooltip (juce::String (family) + " · " + info.name
+                    + "\n\nSelects the active synthesis engine. Character models share Karplus–Strong and modal cores.");
     }
 
     [[nodiscard]] int currentIndex() const

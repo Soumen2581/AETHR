@@ -60,9 +60,14 @@ AethrEditor::AethrEditor (AethrProcessor& processorToUse)
     setLookAndFeel (&lookAndFeel);
     setResizable (true, true);
     setResizeLimits (1100, 700, 1920, 1080);
+    setTitle ("AETHR Physical Resonance Engine");
+    setDescription ("ixmuk physical-modelling instrument editor.");
 
     auto& state = aethrProcessor.getValueTreeState();
 
+    presetField.setTitle ("Preset");
+    presetField.setDescription ("Previous and next browse factory presets. Click the centre to open the library.");
+    presetField.setTooltip ("Preset\n\n◀ ▶ step factory presets. Centre opens the category library.");
     presetField.onPrev = [this]
     {
         applyPreset ((currentPreset + presets::numFactoryPresets() - 1) % presets::numFactoryPresets());
@@ -108,6 +113,14 @@ AethrEditor::AethrEditor (AethrProcessor& processorToUse)
 
     for (auto* button : { &initButton, &saveButton, &randomButton, &mutateButton, &undoButton, &redoButton, &advancedButton })
         addAndMakeVisible (*button);
+
+    initButton.setTitle ("Initialise");
+    saveButton.setTitle ("Save user preset");
+    randomButton.setTitle ("Randomise");
+    mutateButton.setTitle ("Mutate");
+    undoButton.setTitle ("Undo");
+    redoButton.setTitle ("Redo");
+    advancedButton.setTitle ("Advanced engineering mode");
 
     laboratoryBox.addItemList ({ "Safe", "Musical", "Experimental", "Chaotic" }, 1);
     laboratoryBox.setSelectedId (2, juce::dontSendNotification);
@@ -791,6 +804,11 @@ void AethrEditor::resized()
 
 void AethrEditor::timerCallback()
 {
+    const auto previousVoices = displayedVoices;
+    const auto previousLevel = displayedLevel;
+    const auto previousPulse = headerPulse;
+    const auto previousEngine = displayedEngine;
+
     displayedLevel = std::max (aethrProcessor.getOutputPeakLevel(), displayedLevel * 0.88f);
     displayedVoices = aethrProcessor.getActiveVoiceCount();
     headerPulse *= 0.90f;
@@ -818,7 +836,8 @@ void AethrEditor::timerCallback()
     const auto energy = juce::jlimit (0.0f, 1.0f, displayedLevel * 1.8f
                                       + (displayedVoices > 0 ? 0.25f : 0.0f));
     exciterView.setEnergy (energy);
-    resonatorView.setState (energy, aethrProcessor.getLastNoteHz());
+    resonatorView.setState (energy, aethrProcessor.getLastNoteHz(),
+                            engine::infoFor (engineType).name);
     bodyView.setEnergy (energy);
     meterView.setLevel (displayedLevel);
 
@@ -829,7 +848,35 @@ void AethrEditor::timerCallback()
         randomButton.setToggleState (false, juce::dontSendNotification);
 
     updateSyncEnableState();
-    repaint();
+
+    // Telemetry views animate every tick; chassis/footer only when chrome changes
+    // or on a low-rate heartbeat (avoids full-editor storms at 36 Hz).
+    exciterView.repaint();
+    resonatorView.repaint();
+    bodyView.repaint();
+    filterView.repaint();
+    driveView.repaint();
+    layerView.repaint();
+    lfo1View.repaint();
+    lfo2View.repaint();
+    delayView.repaint();
+    motionView.repaint();
+    chamberView.repaint();
+    meterView.repaint();
+    modMatrix.repaint();
+    arpStrip.repaint();
+
+    ++chromeFrame;
+
+    const bool chromeDirty = headerPulse > 0.02f
+                          || previousPulse > 0.02f
+                          || displayedVoices != previousVoices
+                          || displayedEngine != previousEngine
+                          || std::abs (displayedLevel - previousLevel) > 0.02f
+                          || (chromeFrame % 6) == 0;
+
+    if (chromeDirty)
+        repaint();
 }
 
 } // namespace aethr

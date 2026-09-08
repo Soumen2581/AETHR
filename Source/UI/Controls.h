@@ -369,7 +369,8 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> attachment;
 };
 
-class AethrPresetField : public juce::Component
+class AethrPresetField : public juce::Component,
+                         public juce::SettableTooltipClient
 {
 public:
     std::function<void()> onOpenBrowser;

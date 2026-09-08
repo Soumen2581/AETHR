@@ -1,38 +1,28 @@
-# Sprint Review — Sprint 1
+# Sprint Review — Sprint 2
 
-**Sprint:** AETHR Foundation Hardening  
+**Sprint:** AETHR Visual System  
 **Date:** 2026-09-08  
-**Goal:** Close remaining host/DSP contract holes so offline bounce, delay automation, session recall, and risk docs are trustworthy.
+**Goal:** Premium visual honesty and efficiency without a UI rewrite.
 
 ## Completed
 
 | Story | Result |
 |-------|--------|
-| S1-1 Synced tail length | `getTailLengthSeconds` uses `resolvedDelaySeconds` |
-| S1-2 Click-free delay | ~20 ms read crossfade on time jumps in `FxRack` |
-| S1-3 Preset identity in state | `aethrFactoryPresetIndex` property + editor restore |
-| S1-4 MIDI CC1 contract | CC1 → brightness (live); documented in INSTALL |
-| S1-5 Risk register truth | R10 updated for Windows CI |
-| Agile OS docs | `AGILE_PRODUCT_BACKLOG.md`, `TECHNICAL_DEBT.md` |
+| S2-1 Scoped repaints | Telemetry views repaint every tick; full chrome ~6 Hz / on change |
+| S2-2 Honest labeling | Resonator footer `STATUS ART`; matrix `ROUTING OVERVIEW` + read-only note |
+| S2-3 Category browser | Factory list grouped by category headers |
+| S2-4 Accessibility | Titles on editor/actions; Esc closes library |
+| S2-5 Engine tooltips | Family · name with core explanation |
 
-## Not completed (defer)
+## Not completed
 
-- Held-note engine-switch test without `reset()` (C-2)
-- Filter per-block coeffs (B-4)
-- Scoped UI repaint (D-6)
-
-## Bugs discovered
-
-None blocking. Polish CI run for `f55ea55` was still in progress at review time — verify before calling Sprint 1 fully closed on CI.
-
-## Technical debt
-
-Updated `docs/TECHNICAL_DEBT.md` — TD-3, TD-7, TD-11, TD-12, TD-13 addressed this sprint.
+- Real audio-scope Resonance Core (deferred — would be Sprint 2++ / Sprint 3 adjacent)
+- Full AccessibilityHandler for custom hit zones
 
 ## Test results
 
-Local: `ctest --preset ci` — **80 tests** expected after rediscovery; preset index + factory leak tests pass. Full suite re-run green after Sprint 1 changes.
+Local: `ctest --preset ci` — full suite green after Sprint 2 build.
 
 ## Next sprint recommendation
 
-**Sprint 2 — AETHR Visual System:** scoped repaints, Resonance Core telemetry honesty, a11y, preset browser categories (no giant rewrite).
+**Sprint 3 — Sound Quality:** held-note engine-switch test, per-engine character audit, filter block-rate coeffs, optional soft-sat defaults.

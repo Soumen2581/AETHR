@@ -108,7 +108,12 @@ class ResonatorView : public juce::Component
 public:
     explicit ResonatorView (juce::AudioProcessorValueTreeState& s) : state (s) { setOpaque (false); }
 
-    void setState (float e, float hz) noexcept { energy = e; noteHz = hz; }
+    void setState (float e, float hz, juce::String engineLabel = "STRING") noexcept
+    {
+        energy = e;
+        noteHz = hz;
+        engineName = std::move (engineLabel);
+    }
 
     void paint (juce::Graphics& g) override
     {
@@ -162,13 +167,15 @@ public:
         g.setFont (valueFont (9.0f));
         g.drawText (noteHz > 1.0f ? juce::String (noteHz, 1) + " Hz" : "IDLE",
                     footer, juce::Justification::centredLeft, false);
-        g.drawText ("STRING  /  LOOP", footer, juce::Justification::centredRight, false);
+        g.drawText (engineName.toUpperCase() + "  ·  STATUS ART", footer,
+                    juce::Justification::centredRight, false);
     }
 
 private:
     juce::AudioProcessorValueTreeState& state;
     float energy { 0.0f };
     float noteHz { 0.0f };
+    juce::String engineName { "STRING" };
 };
 
 class BodyView : public juce::Component
@@ -523,6 +530,10 @@ public:
     void paint (juce::Graphics& g) override
     {
         auto r = getLocalBounds().toFloat().reduced (6.0f, 2.0f);
+        g.setColour (juce::Colour (Theme::goldDim).withAlpha (0.85f));
+        g.setFont (labelFont (8.0f));
+        g.drawText ("ROUTING OVERVIEW", r.removeFromTop (12.0f), juce::Justification::centredLeft, false);
+
         const char* sources[] = { "LFO 1", "LFO 2", "ENV", "CHAOS" };
         const char* destIds[] = { "lfo1.dest", "lfo2.dest", "env.dest" };
         const char* destNames[] = { "OFF", "PITCH", "DECAY", "DAMP", "BRIGHT", "EXCITE",
@@ -548,6 +559,11 @@ public:
                         juce::Rectangle<float> (r.getRight() - 68.0f, y - 6.0f, 66.0f, 12.0f),
                         juce::Justification::centredLeft, false);
         }
+
+        g.setColour (juce::Colour (Theme::textSecondary).withAlpha (0.55f));
+        g.setFont (labelFont (7.5f));
+        g.drawText ("READ-ONLY  ·  EDIT VIA DEST MENUS", r.removeFromBottom (10.0f),
+                    juce::Justification::centredRight, false);
     }
 
 private:

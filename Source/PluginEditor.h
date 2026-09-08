@@ -59,7 +59,7 @@ private:
     ui::AethrPanel driveSection    { "DRIVE",      "NONLINEAR STAGE",       ui::Glyph::drive,      "DRV / 05", ui::Rank::minor };
     ui::AethrPanel layerSection    { "LAYERS",     "DUAL ORBIT",            ui::Glyph::layers,     "LYR / 06", ui::Rank::minor };
     ui::AethrPanel macroSection    { "MACROS",     "PERFORMANCE CORE",      ui::Glyph::macros,     "MCR / 07", ui::Rank::major };
-    ui::AethrPanel modSection      { "MODULATION", "ROUTING MATRIX",        ui::Glyph::modulation, "MOD / 08", ui::Rank::major };
+    ui::AethrPanel modSection      { "MODULATION", "ROUTING OVERVIEW",        ui::Glyph::modulation, "MOD / 08", ui::Rank::major };
     ui::AethrPanel delaySection    { "DELAY",      "SYNCED STEREO TIME",     ui::Glyph::delay,      "DLY / 09", ui::Rank::minor };
     ui::AethrPanel motionSection   { "MOTION",     "SYNCED CHORUS / PHASER", ui::Glyph::motion,     "MOT / 10", ui::Rank::minor };
     ui::AethrPanel reverbSection   { "CHAMBER",    "SPATIAL FIELD",         ui::Glyph::chamber,    "CMB / 11", ui::Rank::minor };
@@ -108,6 +108,7 @@ private:
     float displayedLevel { 0.0f };
     float headerPulse { 0.0f };
     int displayedVoices { 0 };
+    int chromeFrame { 0 };
     bool applyingMaterial { false };
     bool advancedMode { false };
     juce::Random rng { 0xae711u };

@@ -19,13 +19,23 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 
 | Field | Value |
 |-------|--------|
-| **Sprint** | 1 |
-| **Name** | AETHR Foundation Hardening |
-| **Goal** | Close remaining host/DSP contract holes so offline bounce, delay automation, session recall, and risk docs are trustworthy |
+| **Sprint** | 2 |
+| **Name** | AETHR Visual System |
+| **Goal** | Premium visual honesty and efficiency without a UI rewrite — scoped repaints, truthful Resonance Core labels, category preset browser, basic accessibility |
 | **Dates** | 2026-09-08 → 2026-09-15 |
 | **Branch policy** | Prefer `fix/*` / `feature/*`; small focused commits on `master` only when risk is low and CI is green |
 
-### Sprint 1 stories
+### Sprint 2 stories
+
+| ID | Story | Priority | Status |
+|----|-------|----------|--------|
+| S2-1 | Scoped UI repaints (stop full-editor every tick) | P2 | DONE |
+| S2-2 | Honest Resonance Core / matrix labeling | P2 | DONE |
+| S2-3 | Preset browser grouped by category | P2 | DONE |
+| S2-4 | Accessibility titles + Esc dismiss browser | P2 | DONE |
+| S2-5 | Engine strip tooltips (name + family) | P2 | DONE |
+
+### Sprint 1 stories (complete)
 
 | ID | Story | Priority | Status |
 |----|-------|----------|--------|
@@ -34,7 +44,7 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | S1-3 | Preset identity round-trips with host state | P1 | DONE |
 | S1-4 | MIDI CC1 contract (implement or document) | P1 | DONE |
 | S1-5 | Risk register truth (R10 / residuals) | P1 | DONE |
-| S1-6 | Confirm polish-pass CI green on master | P0 | IN PROGRESS |
+| S1-6 | Confirm polish-pass CI green on master | P0 | DONE |
 
 ---
 
@@ -81,10 +91,10 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | D-3 | Sync enable gating | P1 | DONE | |
 | D-4 | ADV Performance / Engineering | P1 | DONE | |
 | D-5 | Phaser feedback + seed controls | P1 | DONE | |
-| D-6 | Scoped 36 Hz repaint | P2 | TODO | Sprint 2 |
-| D-7 | Resonance Core telemetry viz | P2 | TODO | Sprint 2 |
-| D-8 | Accessibility handlers | P2 | TODO | Sprint 2 |
-| D-9 | Wordmark branding constant | P2 | DONE | |
+| D-6 | Scoped 36 Hz repaint | P2 | DONE | Sprint 2 |
+| D-7 | Resonance Core telemetry viz | P2 | DONE | Honest STATUS ART labels |
+| D-8 | Accessibility handlers | P2 | DONE | Titles + Esc browser |
+| D-14 | Category preset browser | P2 | DONE | Sprint 2 |
 
 ### EPIC E — Presets
 
