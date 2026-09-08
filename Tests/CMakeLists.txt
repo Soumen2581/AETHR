@@ -35,8 +35,10 @@ aethr_apply_strict_warnings(${AETHR_TEST_SOURCES_ABS})
 
 # The safety guards promise to substitute *exactly* zero, and the gain floor
 # promises *exact* silence. Asserting that requires exact comparisons, so the
-# warning against them is switched off for test code only.
-aethr_relax_source_warnings(-Wno-float-equal ${AETHR_TEST_SOURCES_ABS})
+# warning against them is switched off for test code only (Clang/GCC).
+if(NOT MSVC)
+    aethr_relax_source_warnings(-Wno-float-equal ${AETHR_TEST_SOURCES_ABS})
+endif()
 
 target_link_libraries(AethrTests
     PRIVATE
