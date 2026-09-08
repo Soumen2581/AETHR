@@ -67,7 +67,7 @@ AethrEditor::AethrEditor (AethrProcessor& processorToUse)
 
     presetField.setTitle ("Preset");
     presetField.setDescription ("Previous and next browse factory presets. Click the centre to open the library.");
-    presetField.setTooltip ("Preset\n\n◀ ▶ step factory presets. Centre opens the category library.");
+    presetField.setTooltip ("Preset\n\nLeft/right edges step factory presets. Centre opens the category library.");
     presetField.onPrev = [this]
     {
         applyPreset ((currentPreset + presets::numFactoryPresets() - 1) % presets::numFactoryPresets());

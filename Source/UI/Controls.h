@@ -399,9 +399,23 @@ public:
         g.setFont (labelFont (8.0f));
         g.drawText (category.toUpperCase(), bounds.removeFromTop (11.0f), juce::Justification::centred, false);
 
+        // Palatino has no ◀/▶ glyphs — UTF-8 lead bytes render as "â". Draw geometry instead.
         g.setColour (juce::Colour (Theme::gold));
         g.setFont (titleFont (14.0f));
-        g.drawText ("◀   " + name + "   ▶", bounds, juce::Justification::centred, false);
+        g.drawText (name, bounds, juce::Justification::centred, false);
+
+        const auto midY = bounds.getCentreY();
+        const auto arrow = 4.5f;
+        juce::Path left;
+        left.addTriangle (bounds.getX() + 10.0f, midY,
+                          bounds.getX() + 10.0f + arrow, midY - arrow,
+                          bounds.getX() + 10.0f + arrow, midY + arrow);
+        juce::Path right;
+        right.addTriangle (bounds.getRight() - 10.0f, midY,
+                           bounds.getRight() - 10.0f - arrow, midY - arrow,
+                           bounds.getRight() - 10.0f - arrow, midY + arrow);
+        g.fillPath (left);
+        g.fillPath (right);
     }
 
     void mouseUp (const juce::MouseEvent& event) override
