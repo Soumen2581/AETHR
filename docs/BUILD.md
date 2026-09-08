@@ -20,10 +20,16 @@ dependencies declares such a floor, so CMake 4 works without compatibility shims
 
 ## Continuous integration
 
-GitHub Actions (`.github/workflows/ci.yml`) builds and tests on **macOS** and **Windows**
-on every push and pull request to `master` / `main`. CI configures with
-`AETHR_WARNINGS_AS_ERRORS=ON` and `AETHR_COPY_AFTER_BUILD=OFF`, then uploads installable
-plugin zips as workflow artefacts.
+See [`CI.md`](CI.md) for the full quality gate (macOS + Windows matrix, pluginval,
+artefacts, releases).
+
+Local equivalent of Actions:
+
+```bash
+cmake --preset ci
+cmake --build --preset ci --parallel
+ctest --preset ci --output-on-failure
+```
 
 **End-user install steps (folders, DAW rescan, troubleshooting):** see
 [`INSTALL.md`](INSTALL.md).

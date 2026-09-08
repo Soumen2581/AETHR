@@ -80,6 +80,19 @@
         "AETHR_COPY_AFTER_BUILD": "OFF",
         "AETHR_BUILD_AU": "OFF"
       }
+    },
+    {
+      "name": "ci",
+      "inherits": "base",
+      "displayName": "CI (RelWithDebInfo, warnings as errors, no install copy)",
+      "description": "Matches GitHub Actions: same flags on macOS and Windows. AU still only builds on Apple.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "AETHR_WARNINGS_AS_ERRORS": "ON",
+        "AETHR_COPY_AFTER_BUILD": "OFF",
+        "AETHR_BUILD_STANDALONE": "ON",
+        "AETHR_BUILD_TESTS": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -87,7 +100,8 @@
     { "name": "debug", "configurePreset": "debug" },
     { "name": "release", "configurePreset": "release" },
     { "name": "release-native", "configurePreset": "release-native" },
-    { "name": "windows", "configurePreset": "windows" }
+    { "name": "windows", "configurePreset": "windows" },
+    { "name": "ci", "configurePreset": "ci" }
   ],
   "testPresets": [
     {
@@ -105,6 +119,12 @@
     {
       "name": "windows",
       "configurePreset": "windows",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci",
       "output": { "outputOnFailure": true },
       "execution": { "noTestsAction": "error", "stopOnFailure": false }
     }

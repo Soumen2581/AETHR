@@ -2,18 +2,35 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, develop, development, 'feature/**', 'fix/**', 'ci/**']
   pull_request:
-    branches: [master, main]
+    branches: [master, main, develop, development]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  static:
+    name: Static checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Static quality gate
+        run: |
+          chmod +x Tools/ci-static-check.sh
+          ./Tools/ci-static-check.sh
+
   build-and-test:
     name: ${{ matrix.name }}
+    needs: static
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
 
@@ -23,8 +40,10 @@ jobs:
         include:
           - os: macos-14
             name: macOS
+            verify_os: macOS
           - os: windows-2022
             name: Windows
+            verify_os: Windows
 
     steps:
       - name: Checkout
@@ -38,63 +57,53 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install ninja -y
 
+      - name: Enable MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Cache CMake FetchContent
         uses: actions/cache@v4
         with:
-          path: build/ci/_deps
-          key: deps-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'Tests/CMakeLists.txt') }}
+          path: |
+            build/ci/_deps
+            External/JUCE
+            External/Catch2
+          key: deps-v2-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'Tests/CMakeLists.txt', 'CMakePresets.json') }}
           restore-keys: |
-            deps-${{ runner.os }}-
+            deps-v2-${{ runner.os }}-
 
-      # macOS: VST3 + AU + Standalone
-      - name: Configure (macOS)
+      - name: Configure
+        run: |
+          cmake --preset ci
+          test -f build/ci/CMakeCache.txt || (echo "Configure did not produce CMakeCache.txt" && exit 1)
+
+      - name: Build
+        run: cmake --build --preset ci --parallel
+
+      - name: Unit / DSP / Engine tests (CTest)
+        run: ctest --preset ci --output-on-failure --parallel
+
+      - name: Verify plugin artefacts
+        shell: bash
+        run: |
+          chmod +x Tools/ci-verify-artefacts.sh
+          ./Tools/ci-verify-artefacts.sh \
+            build/ci/Aethr_artefacts/RelWithDebInfo \
+            "${{ matrix.verify_os }}"
+
+      - name: Pluginval (macOS VST3)
         if: runner.os == 'macOS'
         run: |
-          cmake -S . -B build/ci -G Ninja \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DAETHR_WARNINGS_AS_ERRORS=ON \
-            -DAETHR_COPY_AFTER_BUILD=OFF \
-            -DAETHR_BUILD_TESTS=ON \
-            -DAETHR_BUILD_STANDALONE=ON \
-            -DAETHR_BUILD_AU=ON
-
-      - name: Build (macOS)
-        if: runner.os == 'macOS'
-        run: cmake --build build/ci --parallel
-
-      - name: Test (macOS)
-        if: runner.os == 'macOS'
-        working-directory: build/ci
-        run: ctest --output-on-failure --parallel
-
-      # Windows: VST3 + Standalone (AU is Apple-only)
-      - name: Configure (Windows)
-        if: runner.os == 'Windows'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          cmake -S . -B build/ci -G Ninja ^
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo ^
-            -DAETHR_WARNINGS_AS_ERRORS=ON ^
-            -DAETHR_COPY_AFTER_BUILD=OFF ^
-            -DAETHR_BUILD_TESTS=ON ^
-            -DAETHR_BUILD_STANDALONE=ON ^
-            -DAETHR_BUILD_AU=OFF
-
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          cmake --build build/ci --parallel
-
-      - name: Test (Windows)
-        if: runner.os == 'Windows'
-        shell: cmd
-        working-directory: build/ci
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          ctest --output-on-failure --parallel
+          chmod +x Tools/fetch-pluginval.sh
+          ./Tools/fetch-pluginval.sh v1.0.4
+          PLUGINVAL="Tools/pluginval.app/Contents/MacOS/pluginval"
+          test -x "${PLUGINVAL}"
+          "${PLUGINVAL}" \
+            --strictness-level 8 \
+            --validate-in-process \
+            --skip-gui-tests \
+            --output-dir build/ci/pluginval \
+            "build/ci/Aethr_artefacts/RelWithDebInfo/VST3/AETHR.vst3"
 
       - name: Package plugin artefacts (macOS)
         if: runner.os == 'macOS'
@@ -125,10 +134,12 @@ jobs:
           path: dist/*
           if-no-files-found: error
 
-      - name: Upload test log on failure
+      - name: Upload test / pluginval logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ctest-${{ matrix.name }}
-          path: build/ci/Testing/Temporary/
+          name: ci-logs-${{ matrix.name }}
+          path: |
+            build/ci/Testing/Temporary/
+            build/ci/pluginval/
           if-no-files-found: ignore

@@ -1,6 +1,7 @@
 # AETHR — Physical Resonance Engine
 
 [![CI](https://github.com/Soumen2581/AETHR/actions/workflows/ci.yml/badge.svg)](https://github.com/Soumen2581/AETHR/actions/workflows/ci.yml)
+[![Release](https://github.com/Soumen2581/AETHR/actions/workflows/release.yml/badge.svg)](https://github.com/Soumen2581/AETHR/actions/workflows/release.yml)
 
 A polyphonic physical-modelling instrument by **ixmuk**.
 Formats:
@@ -10,7 +11,8 @@ Formats:
 | **macOS** | VST3, Audio Unit, Standalone |
 | **Windows** | VST3, Standalone |
 
-Company: **ixmuk**. CI builds both platforms on every push.
+Company: **ixmuk**. CI builds and tests both platforms on every push
+([docs/CI.md](docs/CI.md)).
 
 **Install:** see **[docs/INSTALL.md](docs/INSTALL.md)** for macOS and Windows
 (CI artefacts, folder paths, DAW tips).
@@ -66,6 +68,7 @@ clean settings). Other engines are distinct character models — see
 | Document | Contents |
 |----------|----------|
 | **[INSTALL.md](docs/INSTALL.md)** | **How to install on macOS and Windows** |
+| **[CI.md](docs/CI.md)** | **GitHub Actions, local≈CI, releases, artefacts** |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Toolchain, signal flow, threading, parameters |
 | [DSP_ARCHITECTURE.md](docs/DSP_ARCHITECTURE.md) | Multi-engine contract and realtime rules |
 | [DSP_NOTES.md](docs/DSP_NOTES.md) | Loop tuning, filters, decay, dispersion maths |

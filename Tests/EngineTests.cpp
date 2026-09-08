@@ -440,3 +440,84 @@ TEST_CASE ("Arpeggiator emits finite audio from a held chord", "[engine][arp]")
     REQUIRE (processor.getArpStep() >= 0);
     REQUIRE (processor.getArpStep() < 16);
 }
+
+TEST_CASE ("Switching engines mid-session stays finite and responds to notes", "[engine][architecture][regression]")
+{
+    AethrProcessor processor;
+    testing::applyTuningTestSettings (processor);
+    auto* engineParam = processor.getValueTreeState().getParameter (params::engine::type);
+    REQUIRE (engineParam != nullptr);
+
+    processor.prepareToPlay (sampleRate, blockSize);
+    juce::AudioBuffer<float> buffer (2, blockSize);
+
+    for (int index = 0; index < engine::numEngineTypes; ++index)
+    {
+        engineParam->setValueNotifyingHost (engineParam->convertTo0to1 (static_cast<float> (index)));
+        processor.reset();
+
+        for (int burst = 0; burst < 3; ++burst)
+        {
+            juce::MidiBuffer midi;
+            midi.addEvent (juce::MidiMessage::noteOn (1, 48 + (burst * 7), 0.9f), 0);
+            midi.addEvent (juce::MidiMessage::noteOff (1, 48 + (burst * 7)), blockSize / 2);
+
+            auto peak = 0.0f;
+
+            for (int block = 0; block < 8; ++block)
+            {
+                buffer.clear();
+                juce::MidiBuffer incoming;
+
+                if (block == 0)
+                    incoming = midi;
+
+                processor.processBlock (buffer, incoming);
+                peak = std::max (peak, buffer.getMagnitude (0, blockSize));
+                REQUIRE (std::isfinite (peak));
+            }
+
+            CAPTURE (index, engine::engineCatalogue[index].name, burst, peak);
+            REQUIRE (peak > 1.0e-5f);
+        }
+    }
+}
+
+TEST_CASE ("Extreme resonator settings stay finite across engines", "[engine][stability][regression]")
+{
+    AethrProcessor processor;
+    auto* engineParam = processor.getValueTreeState().getParameter (params::engine::type);
+    REQUIRE (engineParam != nullptr);
+
+    struct Extreme { const char* id; float value; };
+
+    const Extreme extremes[]
+    {
+        { params::resonator::decayTime, 0.02f },
+        { params::resonator::decayTime, 30.0f },
+        { params::resonator::damping, 0.0f },
+        { params::resonator::damping, 100.0f },
+        { params::resonator::brightness, 0.0f },
+        { params::resonator::brightness, 100.0f },
+        { params::resonator::feedback, 0.0f },
+        { params::resonator::feedback, 100.0f },
+        { params::resonator::stiffness, 100.0f },
+        { params::exciter::level, 0.0f },
+        { params::exciter::level, 100.0f },
+    };
+
+    // Exercise STRING (KS) and BELL (modal) as representatives of both cores.
+    for (const auto engineIndex : { 0, 3 })
+    {
+        engineParam->setValueNotifyingHost (engineParam->convertTo0to1 (static_cast<float> (engineIndex)));
+        testing::applyTuningTestSettings (processor);
+
+        for (const auto& extreme : extremes)
+        {
+            REQUIRE (testing::setParameter (processor, extreme.id, extreme.value));
+            const auto rendered = testing::renderNote (processor, 36, 1.0f, sampleRate, blockSize, 0.35);
+            CAPTURE (engineIndex, extreme.id, extreme.value, rendered.peak());
+            REQUIRE (rendered.isFinite());
+        }
+    }
+}
