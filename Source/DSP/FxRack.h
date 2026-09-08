@@ -90,6 +90,8 @@ public:
         for (auto& line : reverbDelay)
             line.assign (8192, 0.0);
 
+        // ~20 ms equal-power-ish crossfade when delay time jumps under automation.
+        delayFadeStep = 1.0 / std::max (1.0, sampleRate * 0.02);
         reset();
         static_cast<void> (maximumBlockSize);
     }
@@ -108,6 +110,9 @@ public:
 
         delayWrite = chorusWrite = combWriteL = combWriteR = 0;
         reverbWrite = 0;
+        delayTargetSamplesL = delayTargetSamplesR = 0;
+        delayPrevSamplesL = delayPrevSamplesR = 1;
+        delayFadeL = delayFadeR = 0.0;
         svfL = svfR = {};
         phaserL.fill (0.0);
         phaserR.fill (0.0);
@@ -237,13 +242,44 @@ private:
             return;
 
         const auto size = static_cast<int> (delayL.size());
-        const auto dL = std::clamp (static_cast<int> (settings.delayTimeL * sampleRate), 1, size - 2);
-        const auto dR = std::clamp (static_cast<int> (settings.delayTimeR * sampleRate), 1, size - 2);
-        const auto readL = (delayWrite - dL + size) % size;
-        const auto readR = (delayWrite - dR + size) % size;
+        const auto targetL = std::clamp (static_cast<int> (settings.delayTimeL * sampleRate), 1, size - 2);
+        const auto targetR = std::clamp (static_cast<int> (settings.delayTimeR * sampleRate), 1, size - 2);
 
-        auto wetL = delayL[static_cast<std::size_t> (readL)];
-        auto wetR = delayR[static_cast<std::size_t> (readR)];
+        if (targetL != delayTargetSamplesL)
+        {
+            delayPrevSamplesL = delayTargetSamplesL > 0 ? delayTargetSamplesL : targetL;
+            delayTargetSamplesL = targetL;
+            delayFadeL = 1.0;
+        }
+
+        if (targetR != delayTargetSamplesR)
+        {
+            delayPrevSamplesR = delayTargetSamplesR > 0 ? delayTargetSamplesR : targetR;
+            delayTargetSamplesR = targetR;
+            delayFadeR = 1.0;
+        }
+
+        const auto readNewL = (delayWrite - delayTargetSamplesL + size) % size;
+        const auto readNewR = (delayWrite - delayTargetSamplesR + size) % size;
+        const auto readOldL = (delayWrite - delayPrevSamplesL + size) % size;
+        const auto readOldR = (delayWrite - delayPrevSamplesR + size) % size;
+
+        auto wetL = delayL[static_cast<std::size_t> (readNewL)];
+        auto wetR = delayR[static_cast<std::size_t> (readNewR)];
+
+        if (delayFadeL > 0.0)
+        {
+            const auto old = delayL[static_cast<std::size_t> (readOldL)];
+            wetL = wetL * (1.0 - delayFadeL) + old * delayFadeL;
+            delayFadeL = std::max (0.0, delayFadeL - delayFadeStep);
+        }
+
+        if (delayFadeR > 0.0)
+        {
+            const auto old = delayR[static_cast<std::size_t> (readOldR)];
+            wetR = wetR * (1.0 - delayFadeR) + old * delayFadeR;
+            delayFadeR = std::max (0.0, delayFadeR - delayFadeStep);
+        }
 
         delayLpL += (0.15 + 0.8 * settings.delayDamping) * (wetL - delayLpL);
         delayLpR += (0.15 + 0.8 * settings.delayDamping) * (wetR - delayLpR);
@@ -361,6 +397,10 @@ private:
     std::vector<double> delayL, delayR, chorusL, chorusR, combL, combR;
     std::array<std::vector<double>, 8> reverbDelay {};
     int delayWrite { 0 }, chorusWrite { 0 }, combWriteL { 0 }, combWriteR { 0 }, reverbWrite { 0 };
+    int delayTargetSamplesL { 0 }, delayTargetSamplesR { 0 };
+    int delayPrevSamplesL { 1 }, delayPrevSamplesR { 1 };
+    double delayFadeL { 0.0 }, delayFadeR { 0.0 };
+    double delayFadeStep { 1.0 / 882.0 };
 
     SvfState svfL, svfR;
     std::array<double, 6> phaserL {};

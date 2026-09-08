@@ -111,6 +111,10 @@ public:
     /** Voice count currently selected by the (non-automatable) polyphony parameter. */
     [[nodiscard]] int getSelectedPolyphony() const noexcept;
 
+    /** Factory preset index shown in the editor; persisted with host state. */
+    [[nodiscard]] int getFactoryPresetIndex() const noexcept { return factoryPresetIndex; }
+    void setFactoryPresetIndex (int index) noexcept;
+
     /**
         The engine, for tests that need to inspect tuning.
 
@@ -366,6 +370,10 @@ private:
     std::atomic<float> lastNoteHz        { 0.0f };
     std::atomic<double> hostTempoBpm     { 120.0 };
     std::atomic<int>   arpStep           { 0 };
+    std::atomic<float> midiModWheel      { 0.0f };
+
+    int factoryPresetIndex { 0 };
+    static constexpr const char* factoryPresetIndexProperty = "aethrFactoryPresetIndex";
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AethrProcessor)
 };

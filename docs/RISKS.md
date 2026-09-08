@@ -152,10 +152,10 @@ non-negotiable and unrelated to the standard version.
 
 ## R10 — Windows portability debt
 
-**Likelihood** medium · **Impact** low-medium · **Status** open
+**Likelihood** low · **Impact** low · **Status** mitigated
 
-The build is portable by construction but has never been compiled on Windows.
+Windows builds are part of GitHub Actions CI (`windows-2022`, `cmake --preset ci`).
+MSVC-specific issues already addressed: GCC-only warning flags gated, 64-voice pool
+heap-allocated to avoid default stack overflow in Catch2.
 
-*Mitigation:* MSVC warning flags already present; no Apple-specific CMake outside `if(APPLE)`; no
-platform APIs used directly. Expect a short round of warning fixes on the first Windows build, and do
-not schedule it as the last task before a release.
+*Residual:* unsigned Windows artefacts; local developers still need an x64 Native Tools shell.

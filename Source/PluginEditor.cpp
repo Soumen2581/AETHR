@@ -73,7 +73,9 @@ AethrEditor::AethrEditor (AethrProcessor& processorToUse)
     };
     presetField.onOpenBrowser = [this] { showBrowser (true); };
     addAndMakeVisible (presetField);
-    presetField.setText (presets::factory[0].name, presets::factory[0].category);
+    currentPreset = aethrProcessor.getFactoryPresetIndex();
+    presetField.setText (presets::factory[static_cast<std::size_t> (currentPreset)].name,
+                         presets::factory[static_cast<std::size_t> (currentPreset)].category);
 
     initButton.onClick = [this] { applyPreset (0); };
     initButton.setTooltip ("INIT\n\nReset every parameter to the factory Init snapshot.");
@@ -339,6 +341,7 @@ AethrEditor::~AethrEditor()
 void AethrEditor::applyPreset (int index)
 {
     currentPreset = juce::jlimit (0, presets::numFactoryPresets() - 1, index);
+    aethrProcessor.setFactoryPresetIndex (currentPreset);
     aethrProcessor.getUndoManager().beginNewTransaction ("AETHR preset");
     presets::applyFactory (aethrProcessor.getValueTreeState(), currentPreset);
     presetField.setText (presets::factory[static_cast<std::size_t> (currentPreset)].name,

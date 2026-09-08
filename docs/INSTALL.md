@@ -213,6 +213,18 @@ Rescan VST3 plug-ins (Ableton / FL / Cubase / Reaper / Bitwig), then restart the
 2. Send MIDI — the footer should show activity.
 3. Start on **String**, then try other engines; optional **ARP** under the engine strip.
 
+### MIDI supported today
+
+| Message | Behaviour |
+|---------|-----------|
+| Note on / off | Voice allocation |
+| Velocity | Amplitude (scaled by Vel) |
+| Sustain pedal (CC64) | Hold |
+| Pitch bend | ±2 semitones |
+| Mod wheel (CC1) | Opens resonator / exciter brightness (live only; not written into presets) |
+
+Aftertouch and program change are not mapped yet.
+
 Company in the UI: **IXMUK** · Codes: manufacturer `Ixmk`, plugin `Aetr`
 
 ---

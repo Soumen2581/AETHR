@@ -228,3 +228,18 @@ TEST_CASE ("Factory presets start from Init so earlier patches do not leak", "[p
     REQUIRE (state.getRawParameterValue (aethr::params::fx::phaserMix)->load()
              == Catch::Approx (0.0f).margin (0.05f));
 }
+
+TEST_CASE ("Factory preset index survives host state round-trip", "[parameters][state][presets]")
+{
+    aethr::AethrProcessor source;
+    source.setFactoryPresetIndex (5);
+    aethr::presets::applyFactory (source.getValueTreeState(), 5);
+
+    juce::MemoryBlock block;
+    source.getStateInformation (block);
+
+    aethr::AethrProcessor destination;
+    destination.setStateInformation (block.getData(), static_cast<int> (block.getSize()));
+
+    REQUIRE (destination.getFactoryPresetIndex() == 5);
+}

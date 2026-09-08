@@ -1,5 +1,13 @@
 #include "PluginProcessor.h"
 
+#include "Core/AudioMath.h"
+#include "Core/Branding.h"
+#include "Core/RealtimeGuards.h"
+#include "Core/TempoSync.h"
+#include "Engine/EngineType.h"
+#include "Parameters/ParameterIDs.h"
+#include "PluginEditor.h"
+#include "Presets/PresetManager.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -10,6 +18,7 @@
 #include "Core/TempoSync.h"
 #include "Parameters/ParameterIDs.h"
 #include "PluginEditor.h"
+#include "Presets/PresetManager.h"
 
 namespace aethr
 {
@@ -329,6 +338,11 @@ engine::Settings AethrProcessor::buildEngineSettings() const
     settings.body.mix = std::clamp (settings.body.mix + macroBody, 0.0, 1.0);
     settings.stiffness = std::clamp (settings.stiffness + macroMaterial * 0.6, 0.0, 1.0);
 
+    // CC1 (mod wheel) opens brightness without writing APVTS — live expressiveness only.
+    const auto modWheel = static_cast<double> (midiModWheel.load (std::memory_order_relaxed));
+    settings.brightness = std::clamp (settings.brightness + modWheel * 0.35, 0.0, 1.0);
+    settings.exciter.brightness = std::clamp (settings.exciter.brightness + modWheel * 0.25, 0.0, 1.0);
+
     return settings;
 }
 
@@ -466,12 +480,17 @@ const juce::String AethrProcessor::getName() const
 double AethrProcessor::getTailLengthSeconds() const
 {
     // Hosts truncate offline renders at this length, so report a conservative upper
-    // bound of every stage that can still ring after note-off.
+    // bound of every stage that can still ring after note-off. Delay times must use
+    // the same sync resolution as the audio path or synced projects under-report.
+    const auto bpm = hostTempoBpm.load (std::memory_order_relaxed);
     const auto release = readValue (handles.releaseTime, 0.25);
     const auto decay = readValue (handles.decayTime, 1.6);
     const auto delayMix = readValue (handles.delayMix, 0.0);
-    const auto delayTime = std::max (readValue (handles.delayTimeL, 0.0),
-                                     readValue (handles.delayTimeR, 0.0));
+    const auto delayTime = std::max (
+        resolvedDelaySeconds (handles.delaySync, handles.delayDivisionL, handles.delayTimeL,
+                              0.28, bpm, sync::defaultDelayDivisionL),
+        resolvedDelaySeconds (handles.delaySync, handles.delayDivisionR, handles.delayTimeR,
+                              0.36, bpm, sync::defaultDelayDivisionR));
     const auto delayFeedback = readValue (handles.delayFeedback, 0.0) * 0.01;
     const auto reverbMix = readValue (handles.reverbMix, 0.0);
     const auto reverbDecay = readValue (handles.reverbDecay, 0.0) * 0.01;
@@ -495,6 +514,11 @@ int AethrProcessor::getSelectedPolyphony() const noexcept
                                         params::defaultPolyphonyIndex);
 
     return params::polyphonyOptions[index];
+}
+
+void AethrProcessor::setFactoryPresetIndex (int index) noexcept
+{
+    factoryPresetIndex = juce::jlimit (0, presets::numFactoryPresets() - 1, index);
 }
 
 engine::EngineType AethrProcessor::getSelectedEngineType() const noexcept
@@ -662,6 +686,11 @@ void AethrProcessor::handleMidiMessage (const juce::MidiMessage& message) noexce
     else if (message.isSustainPedalOff())
     {
         voiceEngine.setSustainPedal (false);
+    }
+    else if (message.isController() && message.getControllerNumber() == 1)
+    {
+        midiModWheel.store (static_cast<float> (message.getControllerValue()) / 127.0f,
+                            std::memory_order_relaxed);
     }
 }
 
@@ -869,7 +898,8 @@ void AethrProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // Called on the message thread. Copying the tree first keeps the snapshot
     // consistent if a parameter changes while we serialise.
-    const auto state = valueTreeState.copyState();
+    auto state = valueTreeState.copyState();
+    state.setProperty (factoryPresetIndexProperty, factoryPresetIndex, nullptr);
 
     if (const auto xml = state.createXml())
         copyXmlToBinary (*xml, destData);
@@ -887,7 +917,10 @@ void AethrProcessor::setStateInformation (const void* data, int sizeInBytes)
     if (! xml->hasTagName (valueTreeState.state.getType()))
         return;
 
-    valueTreeState.replaceState (juce::ValueTree::fromXml (*xml));
+    auto tree = juce::ValueTree::fromXml (*xml);
+    factoryPresetIndex = juce::jlimit (0, presets::numFactoryPresets() - 1,
+                                       static_cast<int> (tree.getProperty (factoryPresetIndexProperty, 0)));
+    valueTreeState.replaceState (std::move (tree));
 }
 
 } // namespace aethr
