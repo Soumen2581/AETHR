@@ -58,10 +58,27 @@
       "name": "release-native",
       "inherits": "base",
       "displayName": "Release (shipping, host architecture only)",
-      "description": "Fully optimised single-architecture build. Use for profiling, where a universal binary only slows the build down.",
+      "description": "Fully optimised single-architecture build. Use for profiling, where a universal binary only doubles build time.",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "AETHR_WARNINGS_AS_ERRORS": "OFF"
+      }
+    },
+    {
+      "name": "windows",
+      "inherits": "base",
+      "displayName": "Windows (VST3 + Standalone)",
+      "description": "Windows desktop build: VST3 and Standalone. AU is Apple-only.",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "AETHR_WARNINGS_AS_ERRORS": "ON",
+        "AETHR_COPY_AFTER_BUILD": "OFF",
+        "AETHR_BUILD_AU": "OFF"
       }
     }
   ],

@@ -23,10 +23,8 @@ jobs:
         include:
           - os: macos-14
             name: macOS
-            build_au: ON
           - os: windows-2022
             name: Windows
-            build_au: OFF
 
     steps:
       - name: Checkout
@@ -48,6 +46,7 @@ jobs:
           restore-keys: |
             deps-${{ runner.os }}-
 
+      # macOS: VST3 + AU + Standalone
       - name: Configure (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -59,6 +58,16 @@ jobs:
             -DAETHR_BUILD_STANDALONE=ON \
             -DAETHR_BUILD_AU=ON
 
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: cmake --build build/ci --parallel
+
+      - name: Test (macOS)
+        if: runner.os == 'macOS'
+        working-directory: build/ci
+        run: ctest --output-on-failure --parallel
+
+      # Windows: VST3 + Standalone (AU is Apple-only)
       - name: Configure (Windows)
         if: runner.os == 'Windows'
         shell: cmd
@@ -72,21 +81,12 @@ jobs:
             -DAETHR_BUILD_STANDALONE=ON ^
             -DAETHR_BUILD_AU=OFF
 
-      - name: Build (macOS)
-        if: runner.os == 'macOS'
-        run: cmake --build build/ci --parallel
-
       - name: Build (Windows)
         if: runner.os == 'Windows'
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           cmake --build build/ci --parallel
-
-      - name: Test (macOS)
-        if: runner.os == 'macOS'
-        working-directory: build/ci
-        run: ctest --output-on-failure --parallel
 
       - name: Test (Windows)
         if: runner.os == 'Windows'
@@ -95,6 +95,35 @@ jobs:
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
           ctest --output-on-failure --parallel
+
+      - name: Package plugin artefacts (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          ART="build/ci/Aethr_artefacts/RelWithDebInfo"
+          ditto -c -k --keepParent "$ART/VST3/AETHR.vst3" dist/AETHR-macOS-VST3.zip
+          ditto -c -k --keepParent "$ART/AU/AETHR.component" dist/AETHR-macOS-AU.zip
+          ditto -c -k --keepParent "$ART/Standalone/AETHR.app" dist/AETHR-macOS-Standalone.zip
+          ls -la dist
+
+      - name: Package plugin artefacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $art = 'build/ci/Aethr_artefacts/RelWithDebInfo'
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path "$art/VST3/AETHR.vst3" -DestinationPath 'dist/AETHR-Windows-VST3.zip' -Force
+          Compress-Archive -Path "$art/Standalone/AETHR.exe" -DestinationPath 'dist/AETHR-Windows-Standalone.zip' -Force
+          Get-ChildItem dist
+
+      - name: Upload plugin artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: AETHR-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
 
       - name: Upload test log on failure
         if: failure()

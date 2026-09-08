@@ -164,8 +164,15 @@ See `docs/TESTING.md` for what those cover and what they do not.
 
 ## Windows
 
-The build is written to be portable (no Apple-specific CMake outside `if(APPLE)` blocks, MSVC warning
-flags in `cmake/AethrWarnings.cmake`) but has **not yet been compiled on Windows** — there is no
-Windows machine in this environment. Formats there are VST3 and Standalone. Treat the first Windows
-build as an unvalidated step: expect to fix warning-flag differences and any `-Wsign-conversion`
-equivalents MSVC reports differently.
+Supported formats on Windows: **VST3** and **Standalone** (Audio Unit is macOS-only).
+
+```bat
+cmake -S . -B build\ci -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo ^
+  -DAETHR_WARNINGS_AS_ERRORS=ON -DAETHR_COPY_AFTER_BUILD=OFF -DAETHR_BUILD_AU=OFF
+cmake --build build\ci --parallel
+ctest --test-dir build\ci --output-on-failure
+```
+
+Use an “x64 Native Tools” / `vcvars64.bat` shell so MSVC and Ninja share the same environment.
+GitHub Actions builds and tests Windows on every push; download the VST3 zip from the Actions
+artefacts tab.

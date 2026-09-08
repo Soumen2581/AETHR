@@ -3,7 +3,14 @@
 [![CI](https://github.com/Soumen2581/AETHR/actions/workflows/ci.yml/badge.svg)](https://github.com/Soumen2581/AETHR/actions/workflows/ci.yml)
 
 A polyphonic physical-modelling instrument by **ixmuk**.
-Formats: **VST3**, **Audio Unit** (macOS), **Standalone** — macOS & Windows.
+Formats:
+
+| Platform | Formats |
+|----------|---------|
+| **macOS** | VST3, Audio Unit, Standalone |
+| **Windows** | VST3, Standalone |
+
+Company: **ixmuk**. CI builds both platforms on every push.
 
 AETHR is an experimental synthesis lab: thirteen engines in one chassis — strings,
 plucks, bows, bells, plates, membranes, tubes, cavities, waveguides, modal banks,
