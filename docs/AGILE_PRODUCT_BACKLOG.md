@@ -104,7 +104,7 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | E-2 | Stronger Init default | P1 | DONE | |
 | E-3 | Musical randomize ranges | P1 | DONE | |
 | E-4 | Preset name/index in host state | P1 | DONE | Sprint 1 |
-| E-5 | Category browser / ≥50 bank | P2 | TODO | Sprint 4 |
+| E-5 | Category browser / ≥50 bank | P2 | PARTIAL | Browser done Sprint 2; bank size Sprint 4 |
 | E-6 | Favorites | P3 | TODO | |
 
 ### EPIC F — Performance
