@@ -1,12 +1,16 @@
 name: Release
 
+# Builds versioned plugin packages and attaches them to a GitHub Release.
+# Triggered only by an explicit v* tag (or manual dispatch for a dry-run build).
+# Ordinary pushes never publish a release.
+
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Version tag to build (e.g. v0.1.0). Leave empty to use github.ref_name.'
+        description: 'Version tag without creating a release (e.g. v0.1.0). Empty = github.ref_name.'
         required: false
         default: ''
 
@@ -43,14 +47,35 @@ jobs:
         id: ver
         shell: bash
         run: |
+          set -euo pipefail
           if [[ -n "${{ github.event.inputs.tag }}" ]]; then
-            TAG="${{ github.event.inputs.tag }}"
+            RAW="${{ github.event.inputs.tag }}"
           else
-            TAG="${GITHUB_REF_NAME}"
+            RAW="${GITHUB_REF_NAME}"
           fi
-          TAG="${TAG#v}"
-          echo "version=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "Building release artefacts for v${TAG}"
+          # Accept "v0.1.0" or "0.1.0"
+          VER="${RAW#v}"
+          if [[ ! "${VER}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-].+)?$ ]]; then
+            echo "Refusing non-semver-like version: '${RAW}'"
+            exit 1
+          fi
+          echo "version=${VER}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VER}" >> "$GITHUB_OUTPUT"
+          echo "Building release artefacts for v${VER}"
+
+      - name: Check version matches CMake
+        shell: bash
+        run: |
+          set -euo pipefail
+          CMAKE_VER="$(grep -E '^\s*VERSION\s+[0-9]' CMakeLists.txt | head -1 | awk '{print $2}')"
+          TAG_VER="${{ steps.ver.outputs.version }}"
+          echo "CMake project version: ${CMAKE_VER}"
+          echo "Release tag version:   ${TAG_VER}"
+          if [[ "${CMAKE_VER}" != "${TAG_VER}" ]]; then
+            echo "::error::Tag v${TAG_VER} does not match CMakeLists.txt VERSION ${CMAKE_VER}."
+            echo "Bump project(AETHR VERSION …) before tagging, or retag to match."
+            exit 1
+          fi
 
       - name: Install Ninja (macOS)
         if: runner.os == 'macOS'
@@ -64,8 +89,21 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Cache CMake FetchContent
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/ci/_deps
+            External/JUCE
+            External/Catch2
+          key: deps-v2-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'Tests/CMakeLists.txt', 'CMakePresets.json') }}
+          restore-keys: |
+            deps-v2-${{ runner.os }}-
+
       - name: Configure
-        run: cmake --preset ci
+        run: |
+          cmake --preset ci
+          test -f build/ci/CMakeCache.txt || (echo "Configure did not produce CMakeCache.txt" && exit 1)
 
       - name: Build
         run: cmake --build --preset ci --parallel
@@ -81,20 +119,22 @@ jobs:
             build/ci/Aethr_artefacts/RelWithDebInfo \
             "${{ matrix.verify_os }}"
 
-      - name: Package (macOS)
+      - name: Packaging (macOS)
         if: runner.os == 'macOS'
         run: |
           set -euo pipefail
           VER="${{ steps.ver.outputs.version }}"
           ART="build/ci/Aethr_artefacts/RelWithDebInfo"
-          mkdir -p dist/stage
-          cp -R "$ART/VST3/AETHR.vst3" dist/stage/
-          cp -R "$ART/AU/AETHR.component" dist/stage/
-          cp -R "$ART/Standalone/AETHR.app" dist/stage/
-          (cd dist/stage && zip -r "../AETHR-v${VER}-macOS.zip" .)
+          STAGE="dist/stage"
+          mkdir -p "${STAGE}"
+          cp -R "$ART/VST3/AETHR.vst3" "${STAGE}/"
+          cp -R "$ART/AU/AETHR.component" "${STAGE}/"
+          cp -R "$ART/Standalone/AETHR.app" "${STAGE}/"
+          (cd "${STAGE}" && zip -ry "../AETHR-v${VER}-macOS.zip" .)
           ls -la dist
+          unzip -l "dist/AETHR-v${VER}-macOS.zip"
 
-      - name: Package (Windows)
+      - name: Packaging (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
@@ -118,6 +158,7 @@ jobs:
     name: Attach to GitHub Release
     needs: build
     runs-on: ubuntu-24.04
+    # Only attach assets when this run was triggered by a real v* tag push.
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Download all artefacts
@@ -125,10 +166,27 @@ jobs:
         with:
           path: release-assets
 
+      - name: List assets
+        run: find release-assets -type f -name '*.zip' | sort
+
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
-          files: release-assets/**/*.zip
+          tag_name: ${{ github.ref_name }}
+          name: AETHR ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
           generate_release_notes: true
+          files: release-assets/**/*.zip
+          fail_on_unmatched_files: true
+          body: |
+            ## Packages
+
+            | Platform | Archive |
+            |----------|---------|
+            | macOS (VST3 + AU + Standalone) | `AETHR-${{ github.ref_name }}-macOS.zip` |
+            | Windows (VST3 + Standalone) | `AETHR-${{ github.ref_name }}-Windows.zip` |
+
+            Install steps: see `docs/INSTALL.md` in the repository.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

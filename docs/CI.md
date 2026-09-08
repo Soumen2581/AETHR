@@ -90,7 +90,9 @@ The Release workflow builds both platforms with `cmake --preset ci`, tests, pack
 
 and attaches them to the GitHub Release for that tag.
 
-Version source of truth: `project(AETHR VERSION …)` in `CMakeLists.txt` (injected as `AETHR_VERSION_STRING`). Keep the Git tag aligned with that version when cutting a release.
+The tag **must** match `project(AETHR VERSION …)` in `CMakeLists.txt` (e.g. tag `v0.1.0` ↔ `VERSION 0.1.0`). Mismatched tags fail the release job on purpose.
+
+`workflow_dispatch` can dry-run a package build without attaching assets (publish only runs on real `v*` tag pushes).
 
 ## Diagnosing failures
 
