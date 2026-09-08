@@ -3,26 +3,44 @@ build/
 build-*/
 cmake-build-*/
 out/
+Artefacts/
+Reports/
 
-# Vendored dependencies (fetched reproducibly by CMake from pinned tags)
+# Vendored dependencies (fetched by CMake from pinned tags)
 External/JUCE/
 External/Catch2/
+
+# Local tools (fetched by scripts, not part of source)
 Tools/pluginval/
 Tools/pluginval.app/
+Tools/pluginval.zip
 
-# Local tool/IDE state
+# IDE / editor / cache
 .idea/
 .vscode/
 .cache/
+.compile_commands.json
 compile_commands.json
 CMakeUserPresets.json
+*.code-workspace
 
-# macOS
+# macOS / iCloud noise
 .DS_Store
-*.dSYM/
+**/.DS_Store
+**/._*
+* 2
+* 2.*
 
-# Test / profiling artefacts
-Artefacts/
+# Binary / profiling artefacts
+*.dSYM/
 *.wav
 !Tests/Resources/**/*.wav
-Reports/
+*.a
+*.o
+*.dylib
+*.so
+*.dll
+*.exe
+*.app/
+*.vst3/
+*.component/
