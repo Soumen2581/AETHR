@@ -24,7 +24,7 @@ public:
         setWantsKeyboardFocus (true);
         rebuildRows();
         setTitle ("AETHR factory preset library");
-        setDescription ("Choose a factory preset. Press Escape to close.");
+        setDescription ("Choose a factory preset. Scroll the list. Press Escape to close.");
     }
 
     bool keyPressed (const juce::KeyPress& key) override
@@ -34,6 +34,13 @@ public:
             if (onDismiss)
                 onDismiss();
 
+            return true;
+        }
+
+        if (key == juce::KeyPress::upKey || key == juce::KeyPress::downKey)
+        {
+            const auto delta = key == juce::KeyPress::upKey ? -rowHeight : rowHeight;
+            scrollBy (static_cast<float> (delta));
             return true;
         }
 
@@ -54,15 +61,28 @@ public:
 
         g.setColour (juce::Colour (Theme::textSecondary));
         g.setFont (labelFont (10.0f));
-        g.drawText ("FACTORY BY CATEGORY  ·  ESC TO CLOSE", panel.removeFromTop (16.0f),
+        g.drawText ("FACTORY BY CATEGORY  ·  SCROLL  ·  ESC TO CLOSE", panel.removeFromTop (16.0f),
                     juce::Justification::centred, false);
 
-        auto list = panel.reduced (16.0f, 8.0f);
-        const auto rowH = list.getHeight() / static_cast<float> (juce::jmax (1, static_cast<int> (rows.size())));
+        listBounds = panel.reduced (16.0f, 8.0f).toNearestInt();
+        clampScroll();
+
+        g.reduceClipRegion (listBounds);
+
+        auto y = static_cast<float> (listBounds.getY()) - scrollY;
 
         for (int i = 0; i < static_cast<int> (rows.size()); ++i)
         {
-            auto row = list.removeFromTop (rowH);
+            const auto row = juce::Rectangle<float> (static_cast<float> (listBounds.getX()),
+                                                     y,
+                                                     static_cast<float> (listBounds.getWidth()),
+                                                     static_cast<float> (rowHeight));
+            y += static_cast<float> (rowHeight);
+
+            if (row.getBottom() < static_cast<float> (listBounds.getY())
+                || row.getY() > static_cast<float> (listBounds.getBottom()))
+                continue;
+
             const auto& entry = rows[static_cast<std::size_t> (i)];
 
             if (entry.isHeader)
@@ -88,6 +108,22 @@ public:
             g.setFont (labelFont (12.0f));
             g.drawText (entry.label, row.reduced (16.0f, 0.0f), juce::Justification::centredLeft, false);
         }
+
+        // Scroll hint when content overflows
+        if (contentHeight() > listBounds.getHeight())
+        {
+            g.setColour (juce::Colour (Theme::gold).withAlpha (0.35f));
+            const auto track = juce::Rectangle<float> (static_cast<float> (listBounds.getRight() - 3),
+                                                       static_cast<float> (listBounds.getY()),
+                                                       2.0f,
+                                                       static_cast<float> (listBounds.getHeight()));
+            const auto thumbH = juce::jmax (18.0f, track.getHeight() * track.getHeight()
+                                                   / static_cast<float> (contentHeight()));
+            const auto maxScroll = static_cast<float> (juce::jmax (0, contentHeight() - listBounds.getHeight()));
+            const auto thumbY = track.getY() + (maxScroll > 0.0f ? (scrollY / maxScroll) * (track.getHeight() - thumbH)
+                                                                 : 0.0f);
+            g.fillRect (track.getX(), thumbY, track.getWidth(), thumbH);
+        }
     }
 
     void mouseMove (const juce::MouseEvent& event) override
@@ -96,20 +132,29 @@ public:
         repaint();
     }
 
+    void mouseWheelMove (const juce::MouseEvent&, const juce::MouseWheelDetails& wheel) override
+    {
+        scrollBy (-wheel.deltaY * static_cast<float> (rowHeight) * 3.0f);
+    }
+
     void mouseUp (const juce::MouseEvent& event) override
     {
         const auto index = indexAt (event.getPosition());
 
         if (index >= 0 && ! rows[static_cast<std::size_t> (index)].isHeader && onChoose)
             onChoose (rows[static_cast<std::size_t> (index)].factoryIndex);
-        else if (onDismiss)
+        else if (! listBounds.contains (event.getPosition()) && onDismiss)
             onDismiss();
     }
 
     void visibilityChanged() override
     {
         if (isVisible())
+        {
+            scrollY = 0.0f;
             grabKeyboardFocus();
+            repaint();
+        }
     }
 
 private:
@@ -143,20 +188,43 @@ private:
         }
     }
 
-    int indexAt (juce::Point<int> p) const
+    int contentHeight() const noexcept
     {
-        auto panel = getLocalBounds().reduced (getWidth() / 5, getHeight() / 7);
-        panel.removeFromTop (44);
-        auto list = panel.reduced (16, 8);
-
-        if (! list.contains (p) || rows.empty())
-            return -1;
-
-        const auto rowH = juce::jmax (1, list.getHeight() / static_cast<int> (rows.size()));
-        return juce::jlimit (0, static_cast<int> (rows.size()) - 1, (p.y - list.getY()) / rowH);
+        return static_cast<int> (rows.size()) * rowHeight;
     }
 
+    void clampScroll()
+    {
+        const auto maxScroll = static_cast<float> (juce::jmax (0, contentHeight() - listBounds.getHeight()));
+        scrollY = juce::jlimit (0.0f, maxScroll, scrollY);
+    }
+
+    void scrollBy (float delta)
+    {
+        scrollY += delta;
+        clampScroll();
+        repaint();
+    }
+
+    int indexAt (juce::Point<int> p) const
+    {
+        if (! listBounds.contains (p) || rows.empty())
+            return -1;
+
+        const auto localY = p.y - listBounds.getY() + static_cast<int> (scrollY);
+        const auto index = localY / rowHeight;
+
+        if (index < 0 || index >= static_cast<int> (rows.size()))
+            return -1;
+
+        return index;
+    }
+
+    static constexpr int rowHeight = 22;
+
     std::vector<Row> rows;
+    juce::Rectangle<int> listBounds;
+    float scrollY { 0.0f };
     int hover { -1 };
 };
 

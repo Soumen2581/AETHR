@@ -1,19 +1,19 @@
-# Retrospective — Sprint 3
+# Retrospective — Sprint 4
 
 ## What went well?
 
-- Regression-first held-note switch test before claiming engine safety
-- Filter coeff caching is a clean CPU win with no API change
-- Soft sat was already the layout default — documentation + hard-mode finite test closed the honesty gap
+- Kept the first 13 factory indices stable so existing leak/state tests stayed valid
+- Scrollable library was required once the bank grew — shipped with the expansion
+- Host program API + MIDI PC share one apply path (Init-then-apply)
 
 ## What went poorly?
 
-Nothing blocking.
+Favorites deferred; aftertouch still open.
 
 ## Continue doing
 
-- Extend engine tests without `reset()` when testing live parameter changes
+- Prefer message-thread preset apply via `AsyncUpdater` for MIDI-driven changes
 
 ## Next
 
-Sprint 4 workflow — curated presets over new DSP toys.
+Sprint 5 release hardening — freeze features, ship checklist, notarization when secrets exist.

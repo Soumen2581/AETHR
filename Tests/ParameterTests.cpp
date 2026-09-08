@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <set>
+#include <string_view>
 
 #include "Parameters/ParameterIDs.h"
 #include "PluginProcessor.h"
@@ -207,6 +208,27 @@ TEST_CASE ("Malformed or foreign state is rejected without changing current valu
 
     const auto valueAfter = processor.getValueTreeState().getRawParameterValue (aethr::params::output::gain)->load();
     REQUIRE (valueAfter == Approx (valueBefore));
+}
+
+TEST_CASE ("Factory bank is curated to at least 50 presets", "[parameters][presets]")
+{
+    REQUIRE (aethr::presets::numFactoryPresets() >= 50);
+    REQUIRE (std::string_view (aethr::presets::factory[0].name) == "Init");
+    REQUIRE (std::string_view (aethr::presets::factory[2].name) == "Nylon");
+    REQUIRE (std::string_view (aethr::presets::factory[10].name) == "Psychedelic");
+}
+
+TEST_CASE ("Host programs map onto the factory bank", "[parameters][presets]")
+{
+    aethr::AethrProcessor processor;
+    REQUIRE (processor.getNumPrograms() == aethr::presets::numFactoryPresets());
+    REQUIRE (processor.getProgramName (2) == "Nylon");
+
+    processor.setCurrentProgram (10);
+    REQUIRE (processor.getCurrentProgram() == 10);
+    REQUIRE (processor.getFactoryPresetIndex() == 10);
+    REQUIRE (processor.getValueTreeState().getRawParameterValue (aethr::params::layer::bEnable)->load()
+             == Catch::Approx (1.0f).margin (0.05f));
 }
 
 TEST_CASE ("Factory presets start from Init so earlier patches do not leak", "[parameters][presets]")

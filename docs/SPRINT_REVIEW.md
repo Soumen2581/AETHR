@@ -1,22 +1,22 @@
-# Sprint Review — Sprint 3
+# Sprint Review — Sprint 4
 
-**Sprint:** AETHR Sound Quality  
+**Sprint:** AETHR Workflow  
 **Date:** 2026-09-08  
-**Goal:** Tighten DSP CPU contracts and prove mid-note engine switching is safe.
+**Goal:** Curated factory bank, usable library UI, MIDI/host program selection.
 
 ## Completed
 
 | Story | Result |
 |-------|--------|
-| S3-1 Held-note switch | New Catch2 case without `processor.reset()` |
-| S3-2 Filter coeffs | SVF `tan`/coeff update once per settings change / block |
-| S3-3 Motion LFOs | Independent `chorusLfoPhase` / `phaserLfoPhase` |
-| S3-4 Soft sat honesty | Default Soft documented; hard/fold finite test |
+| S4-1 Factory bank ≥50 | **61** curated factory presets; indices 0–12 stable |
+| S4-2 Scrollable browser | Wheel / arrow scroll + scrollbar thumb |
+| S4-3 Program change | Host programs + MIDI PC → factory (async apply) |
+| S4-4 Favorites | Deferred (P3) |
 
 ## Test results
 
-Local: **82/82** via `ctest --preset ci`.
+Local: **84/84** via `ctest --preset ci`.
 
 ## Next sprint recommendation
 
-**Sprint 4 — Workflow:** expand factory bank toward curated categories, MIDI polish if needed, favorites optional — stay feature-light.
+**Sprint 5 — Release Hardening:** feature freeze, QA checklist, packaging / notarization secrets, residual docs.

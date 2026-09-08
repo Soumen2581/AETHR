@@ -260,6 +260,516 @@ inline void percussion (juce::AudioProcessorValueTreeState& s)
     set (s, params::body::mix, 40.0f);
 }
 
+// ---- Sprint 4 curated expansions (first 13 indices stay stable for tests) ----
+
+inline void softNylon (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::nylon));
+    set (s, params::engine::type, 1.0f);
+    set (s, params::exciter::brightness, 48.0f);
+    set (s, params::resonator::decayTime, 2.4f);
+    set (s, params::fx::chorusMix, 14.0f);
+    set (s, params::fx::reverbMix, 16.0f);
+}
+
+inline void harpLike (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::string));
+    set (s, params::engine::type, 0.0f);
+    set (s, params::exciter::burstTime, 3.0f);
+    set (s, params::resonator::decayTime, 3.2f);
+    set (s, params::resonator::brightness, 70.0f);
+    set (s, params::fx::reverbMix, 22.0f);
+}
+
+inline void mutedWire (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::steel));
+    set (s, params::engine::type, 1.0f);
+    set (s, params::resonator::damping, 62.0f);
+    set (s, params::resonator::brightness, 40.0f);
+    set (s, params::resonator::decayTime, 0.55f);
+}
+
+inline void fingerStyle (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::nylon));
+    set (s, params::engine::type, 1.0f);
+    set (s, params::exciter::type, 0);
+    set (s, params::exciter::colour, 22.0f);
+    set (s, params::body::mix, 18.0f);
+    set (s, params::fx::reverbMix, 8.0f);
+}
+
+inline void brassPlate (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::metal));
+    set (s, params::engine::type, 4.0f);
+    set (s, params::exciter::type, 5);
+    set (s, params::resonator::decayTime, 4.5f);
+    set (s, params::fx::satMix, 12.0f);
+    set (s, params::fx::reverbMix, 20.0f);
+}
+
+inline void tinCan (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::hollow));
+    set (s, params::engine::type, 7.0f); // Cavity
+    set (s, params::exciter::type, 4);
+    set (s, params::body::mix, 35.0f);
+    set (s, params::fx::filterCutoff, 3200.0f);
+    set (s, params::fx::filterMix, 40.0f);
+}
+
+inline void steelDrum (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::metal));
+    set (s, params::engine::type, 5.0f);
+    set (s, params::exciter::type, 3);
+    set (s, params::resonator::decayTime, 2.8f);
+    set (s, params::fx::reverbMix, 24.0f);
+}
+
+inline void ceramicChime (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::ceramic));
+    set (s, params::engine::type, 3.0f);
+    set (s, params::resonator::decayTime, 5.0f);
+    set (s, params::fx::reverbSize, 62.0f);
+    set (s, params::fx::reverbMix, 30.0f);
+}
+
+inline void templeBell (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::metal));
+    set (s, params::engine::type, 3.0f);
+    set (s, params::exciter::type, 5);
+    set (s, params::resonator::decayTime, 8.0f);
+    set (s, params::fx::reverbMix, 36.0f);
+    set (s, params::fx::delayMix, 8.0f);
+}
+
+inline void iceBell (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::glass));
+    set (s, params::engine::type, 3.0f);
+    set (s, params::resonator::brightness, 82.0f);
+    set (s, params::fx::chorusMix, 10.0f);
+    set (s, params::fx::reverbMix, 32.0f);
+}
+
+inline void woodBlock (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::wood));
+    set (s, params::engine::type, 5.0f);
+    set (s, params::exciter::burstTime, 0.8f);
+    set (s, params::resonator::decayTime, 0.35f);
+    set (s, params::resonator::damping, 70.0f);
+    set (s, params::body::mix, 28.0f);
+}
+
+inline void tablaHit (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::rubber));
+    set (s, params::engine::type, 5.0f);
+    set (s, params::exciter::type, 4);
+    set (s, params::exciter::burstTime, 2.0f);
+    set (s, params::resonator::decayTime, 0.9f);
+    set (s, params::body::mix, 45.0f);
+}
+
+inline void rimShot (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::wood));
+    set (s, params::engine::type, 1.0f);
+    set (s, params::exciter::burstTime, 0.6f);
+    set (s, params::resonator::decayTime, 0.22f);
+    set (s, params::fx::satDrive, 25.0f);
+    set (s, params::fx::satMix, 22.0f);
+}
+
+inline void frameDrum (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::rubber));
+    set (s, params::engine::type, 5.0f);
+    set (s, params::resonator::decayTime, 1.6f);
+    set (s, params::body::preset, 5);
+    set (s, params::body::mix, 50.0f);
+    set (s, params::fx::reverbMix, 14.0f);
+}
+
+inline void subPluck (juce::AudioProcessorValueTreeState& s)
+{
+    set (s, params::engine::type, 1.0f);
+    set (s, params::exciter::type, 0);
+    set (s, params::resonator::damping, 48.0f);
+    set (s, params::resonator::brightness, 22.0f);
+    set (s, params::resonator::decayTime, 1.8f);
+    set (s, params::fx::filterType, 0);
+    set (s, params::fx::filterCutoff, 420.0f);
+    set (s, params::fx::filterMix, 65.0f);
+    set (s, params::fx::satMix, 28.0f);
+}
+
+inline void growlingBass (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::synthetic));
+    set (s, params::engine::type, 8.0f); // Waveguide
+    set (s, params::resonator::brightness, 30.0f);
+    set (s, params::fx::satMode, 2);
+    set (s, params::fx::satDrive, 45.0f);
+    set (s, params::fx::satMix, 50.0f);
+    set (s, params::fx::filterCutoff, 700.0f);
+    set (s, params::fx::filterMix, 45.0f);
+}
+
+inline void uprightGhost (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::wood));
+    set (s, params::engine::type, 0.0f);
+    set (s, params::resonator::decayTime, 1.1f);
+    set (s, params::resonator::brightness, 35.0f);
+    set (s, params::body::mix, 22.0f);
+    set (s, params::fx::reverbMix, 10.0f);
+}
+
+inline void celloBow (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::string));
+    set (s, params::engine::type, 2.0f);
+    set (s, params::exciter::type, 6);
+    set (s, params::resonator::decayTime, 6.0f);
+    set (s, params::fx::reverbMix, 18.0f);
+    set (s, params::fx::chorusMix, 6.0f);
+}
+
+inline void glassHarmonica (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::glass));
+    set (s, params::engine::type, 2.0f);
+    set (s, params::exciter::type, 6);
+    set (s, params::resonator::decayTime, 9.0f);
+    set (s, params::fx::reverbMix, 40.0f);
+    set (s, params::lfo1::depth, 12.0f);
+    set (s, params::lfo1::dest, 4);
+}
+
+inline void organPipe (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::hollow));
+    set (s, params::engine::type, 6.0f); // Tube
+    set (s, params::exciter::type, 6);
+    set (s, params::resonator::decayTime, 4.0f);
+    set (s, params::fx::reverbMix, 20.0f);
+}
+
+inline void fluteTube (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::wood));
+    set (s, params::engine::type, 6.0f);
+    set (s, params::exciter::brightness, 68.0f);
+    set (s, params::resonator::decayTime, 1.4f);
+    set (s, params::fx::reverbMix, 16.0f);
+}
+
+inline void choirPad (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::synthetic));
+    set (s, params::engine::type, 9.0f); // Modal
+    set (s, params::layer::bEnable, 1.0f);
+    set (s, params::layer::bInterval, 7.0f);
+    set (s, params::layer::bDetune, 8.0f);
+    set (s, params::layer::bLevel, 38.0f);
+    set (s, params::resonator::decayTime, 8.0f);
+    set (s, params::fx::chorusMix, 22.0f);
+    set (s, params::fx::reverbMix, 42.0f);
+}
+
+inline void cloudPad (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::crystal));
+    set (s, params::engine::type, 11.0f);
+    set (s, params::resonator::decayTime, 14.0f);
+    set (s, params::fx::reverbSize, 80.0f);
+    set (s, params::fx::reverbMix, 55.0f);
+    set (s, params::fx::chorusMix, 18.0f);
+    set (s, params::lfo2::depth, 15.0f);
+    set (s, params::lfo2::dest, 4);
+}
+
+inline void softKeys (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::nylon));
+    set (s, params::engine::type, 9.0f);
+    set (s, params::exciter::burstTime, 8.0f);
+    set (s, params::resonator::decayTime, 2.0f);
+    set (s, params::env::attack, 0.04f);
+    set (s, params::fx::reverbMix, 18.0f);
+}
+
+inline void brightLead (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::steel));
+    set (s, params::engine::type, 8.0f);
+    set (s, params::resonator::brightness, 78.0f);
+    set (s, params::fx::satMix, 20.0f);
+    set (s, params::fx::delayMix, 18.0f);
+    set (s, params::fx::delayFeedback, 42.0f);
+}
+
+inline void tapeEchoLead (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::string));
+    set (s, params::engine::type, 1.0f);
+    set (s, params::fx::delaySync, 1.0f);
+    set (s, params::fx::delayDivisionL, 3.0f);
+    set (s, params::fx::delayDivisionR, 8.0f);
+    set (s, params::fx::delayMix, 38.0f);
+    set (s, params::fx::delayFeedback, 48.0f);
+    set (s, params::fx::satMix, 12.0f);
+}
+
+inline void frozenDrone (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::crystal));
+    set (s, params::engine::type, 2.0f);
+    set (s, params::resonator::decayTime, 24.0f);
+    set (s, params::fx::reverbMix, 50.0f);
+    set (s, params::fx::phaserMix, 16.0f);
+    set (s, params::lfo1::rate, 0.12f);
+    set (s, params::lfo1::depth, 20.0f);
+    set (s, params::lfo1::dest, 4);
+}
+
+inline void hollowWind (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::hollow));
+    set (s, params::engine::type, 7.0f);
+    set (s, params::exciter::type, 2);
+    set (s, params::resonator::decayTime, 11.0f);
+    set (s, params::fx::filterCutoff, 1800.0f);
+    set (s, params::fx::filterMix, 35.0f);
+    set (s, params::fx::reverbMix, 45.0f);
+}
+
+inline void alienSwarm (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::alien));
+    set (s, params::engine::type, 12.0f);
+    set (s, params::layer::bEnable, 1.0f);
+    set (s, params::layer::bInterval, 5.0f);
+    set (s, params::layer::bDetune, 18.0f);
+    set (s, params::layer::bLevel, 55.0f);
+    set (s, params::chaos::amount, 35.0f);
+    set (s, params::fx::phaserMix, 34.0f);
+    set (s, params::fx::delayMix, 28.0f);
+}
+
+inline void grainCloud (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::synthetic));
+    set (s, params::engine::type, 10.0f); // Granular
+    set (s, params::engine::controlA, 62.0f);
+    set (s, params::engine::controlB, 40.0f);
+    set (s, params::resonator::decayTime, 7.0f);
+    set (s, params::fx::reverbMix, 38.0f);
+    set (s, params::chaos::amount, 12.0f);
+}
+
+inline void spectralWash (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::crystal));
+    set (s, params::engine::type, 11.0f);
+    set (s, params::exciter::type, 7);
+    set (s, params::resonator::decayTime, 16.0f);
+    set (s, params::fx::reverbMix, 48.0f);
+    set (s, params::fx::phaserMix, 18.0f);
+}
+
+inline void hybridClash (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::alien));
+    set (s, params::engine::type, 12.0f);
+    set (s, params::engine::controlA, 70.0f);
+    set (s, params::engine::controlC, 55.0f);
+    set (s, params::fx::satMix, 30.0f);
+    set (s, params::fx::delayMix, 22.0f);
+    set (s, params::chaos::amount, 28.0f);
+}
+
+inline void nightPad (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::glass));
+    set (s, params::engine::type, 11.0f);
+    set (s, params::resonator::brightness, 45.0f);
+    set (s, params::resonator::decayTime, 12.0f);
+    set (s, params::fx::filterCutoff, 2400.0f);
+    set (s, params::fx::filterMix, 30.0f);
+    set (s, params::fx::reverbMix, 44.0f);
+}
+
+inline void dawnPluck (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::nylon));
+    set (s, params::engine::type, 1.0f);
+    set (s, params::resonator::brightness, 72.0f);
+    set (s, params::fx::delayMix, 14.0f);
+    set (s, params::fx::reverbMix, 20.0f);
+    set (s, params::fx::chorusMix, 10.0f);
+}
+
+inline void mistRoom (juce::AudioProcessorValueTreeState& s)
+{
+    set (s, params::exciter::type, 2);
+    set (s, params::engine::type, 7.0f);
+    set (s, params::resonator::decayTime, 9.0f);
+    set (s, params::body::mix, 25.0f);
+    set (s, params::fx::reverbSize, 72.0f);
+    set (s, params::fx::reverbMix, 58.0f);
+    set (s, params::fx::chorusMix, 12.0f);
+}
+
+inline void pulseArp (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::steel));
+    set (s, params::engine::type, 1.0f);
+    set (s, params::resonator::decayTime, 0.7f);
+    set (s, params::arp::enable, 1.0f);
+    set (s, params::arp::mode, 0.0f);
+    set (s, params::arp::division, 3.0f);
+    set (s, params::arp::octaves, 2.0f);
+    set (s, params::arp::gate, 45.0f);
+    set (s, params::fx::delayMix, 20.0f);
+}
+
+inline void cascadeArp (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::glass));
+    set (s, params::engine::type, 3.0f);
+    set (s, params::arp::enable, 1.0f);
+    set (s, params::arp::mode, 1.0f);
+    set (s, params::arp::division, 2.0f);
+    set (s, params::arp::octaves, 3.0f);
+    set (s, params::arp::swing, 18.0f);
+    set (s, params::fx::reverbMix, 28.0f);
+}
+
+inline void rubberBand (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::rubber));
+    set (s, params::engine::type, 0.0f);
+    set (s, params::resonator::stiffness, 35.0f);
+    set (s, params::resonator::decayTime, 1.2f);
+    set (s, params::fx::satMix, 15.0f);
+}
+
+inline void waveguideLead (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::synthetic));
+    set (s, params::engine::type, 8.0f);
+    set (s, params::engine::controlA, 58.0f);
+    set (s, params::resonator::brightness, 68.0f);
+    set (s, params::fx::delayMix, 16.0f);
+    set (s, params::fx::chorusMix, 12.0f);
+}
+
+inline void modalKeys (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::ceramic));
+    set (s, params::engine::type, 9.0f);
+    set (s, params::exciter::type, 3);
+    set (s, params::resonator::decayTime, 3.5f);
+    set (s, params::fx::reverbMix, 22.0f);
+}
+
+inline void cavityBoom (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::hollow));
+    set (s, params::engine::type, 7.0f);
+    set (s, params::exciter::type, 5);
+    set (s, params::resonator::brightness, 28.0f);
+    set (s, params::resonator::decayTime, 2.5f);
+    set (s, params::fx::satMix, 25.0f);
+    set (s, params::fx::reverbMix, 15.0f);
+}
+
+inline void shimmerGlass (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::glass));
+    set (s, params::engine::type, 11.0f);
+    set (s, params::layer::bEnable, 1.0f);
+    set (s, params::layer::bInterval, 12.0f);
+    set (s, params::layer::bLevel, 30.0f);
+    set (s, params::fx::chorusMix, 20.0f);
+    set (s, params::fx::reverbMix, 36.0f);
+    set (s, params::lfo1::depth, 22.0f);
+    set (s, params::lfo1::dest, 4);
+}
+
+inline void deepPlate (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::metal));
+    set (s, params::engine::type, 4.0f);
+    set (s, params::resonator::decayTime, 7.0f);
+    set (s, params::resonator::brightness, 42.0f);
+    set (s, params::fx::reverbMix, 30.0f);
+    set (s, params::fx::delayMix, 10.0f);
+}
+
+inline void noisyStrike (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::alien));
+    set (s, params::engine::type, 4.0f);
+    set (s, params::exciter::type, 7);
+    set (s, params::exciter::randomAmount, 40.0f);
+    set (s, params::chaos::amount, 18.0f);
+    set (s, params::fx::satMix, 35.0f);
+}
+
+inline void warmRoom (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::wood));
+    set (s, params::engine::type, 0.0f);
+    set (s, params::body::mix, 28.0f);
+    set (s, params::fx::reverbSize, 40.0f);
+    set (s, params::fx::reverbDamp, 55.0f);
+    set (s, params::fx::reverbMix, 28.0f);
+}
+
+inline void crystalRain (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::crystal));
+    set (s, params::engine::type, 3.0f);
+    set (s, params::arp::enable, 1.0f);
+    set (s, params::arp::division, 4.0f);
+    set (s, params::arp::octaves, 2.0f);
+    set (s, params::arp::gate, 35.0f);
+    set (s, params::fx::delayMix, 24.0f);
+    set (s, params::fx::reverbMix, 32.0f);
+}
+
+inline void bowedMetal (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::metal));
+    set (s, params::engine::type, 2.0f);
+    set (s, params::exciter::type, 6);
+    set (s, params::resonator::decayTime, 10.0f);
+    set (s, params::fx::satMix, 10.0f);
+    set (s, params::fx::reverbMix, 26.0f);
+}
+
+inline void vinylGhost (juce::AudioProcessorValueTreeState& s)
+{
+    params::applyMaterialToState (s, static_cast<int> (dsp::Material::nylon));
+    set (s, params::engine::type, 10.0f);
+    set (s, params::exciter::type, 2);
+    set (s, params::fx::filterCutoff, 2800.0f);
+    set (s, params::fx::filterMix, 45.0f);
+    set (s, params::fx::satMix, 18.0f);
+    set (s, params::fx::reverbMix, 22.0f);
+    set (s, params::chaos::amount, 8.0f);
+}
+
 inline constexpr FactoryPreset factory[]
 {
     { "Init",            "Init",         init },
@@ -269,12 +779,61 @@ inline constexpr FactoryPreset factory[]
     { "Wooden Mallet",   "Percussion",   malletWood },
     { "Glass Bell",      "Bells",        glassBell },
     { "Metal Strike",    "Metallic",     metalHit },
-    { "Crystal Pad",     "Glass",        crystalPad },
+    { "Crystal Pad",     "Pads",         crystalPad },
     { "Bowed Drone",     "Drones",       drone },
     { "Dark Bass",       "Bass",         darkBass },
-    { "Psychedelic",     "Psychedelic",  psychedelic },
+    { "Psychedelic",     "Experimental", psychedelic },
     { "Atmosphere",      "Atmosphere",   atmosphere },
     { "Skin Hit",        "Percussion",   percussion },
+    // Sprint 4 expansions
+    { "Soft Nylon",      "Plucked",      softNylon },
+    { "Harp Sweep",      "Plucked",      harpLike },
+    { "Muted Wire",      "Plucked",      mutedWire },
+    { "Finger Style",    "Plucked",      fingerStyle },
+    { "Dawn Pluck",      "Plucked",      dawnPluck },
+    { "Brass Plate",     "Metallic",     brassPlate },
+    { "Tin Can",         "Metallic",     tinCan },
+    { "Steel Drum",      "Metallic",     steelDrum },
+    { "Deep Plate",      "Metallic",     deepPlate },
+    { "Bowed Metal",     "Metallic",     bowedMetal },
+    { "Ceramic Chime",   "Bells",        ceramicChime },
+    { "Temple Bell",     "Bells",        templeBell },
+    { "Ice Bell",        "Bells",        iceBell },
+    { "Crystal Rain",    "Bells",        crystalRain },
+    { "Wood Block",      "Percussion",   woodBlock },
+    { "Tabla Hit",       "Percussion",   tablaHit },
+    { "Rim Shot",        "Percussion",   rimShot },
+    { "Frame Drum",      "Percussion",   frameDrum },
+    { "Sub Pluck",       "Bass",         subPluck },
+    { "Growling Bass",   "Bass",         growlingBass },
+    { "Upright Ghost",   "Bass",         uprightGhost },
+    { "Cavity Boom",     "Bass",         cavityBoom },
+    { "Cello Bow",       "Strings",      celloBow },
+    { "Glass Harmonica", "Strings",      glassHarmonica },
+    { "Organ Pipe",      "Keys",         organPipe },
+    { "Flute Tube",      "Keys",         fluteTube },
+    { "Soft Keys",       "Keys",         softKeys },
+    { "Modal Keys",      "Keys",         modalKeys },
+    { "Choir Pad",       "Pads",         choirPad },
+    { "Cloud Pad",       "Pads",         cloudPad },
+    { "Night Pad",       "Pads",         nightPad },
+    { "Shimmer Glass",   "Pads",         shimmerGlass },
+    { "Bright Lead",     "Leads",        brightLead },
+    { "Tape Echo Lead",  "Leads",        tapeEchoLead },
+    { "Waveguide Lead",  "Leads",        waveguideLead },
+    { "Frozen Drone",    "Drones",       frozenDrone },
+    { "Hollow Wind",     "Atmosphere",   hollowWind },
+    { "Mist Room",       "Atmosphere",   mistRoom },
+    { "Warm Room",       "Atmosphere",   warmRoom },
+    { "Alien Swarm",     "Experimental", alienSwarm },
+    { "Grain Cloud",     "Experimental", grainCloud },
+    { "Spectral Wash",   "Experimental", spectralWash },
+    { "Hybrid Clash",    "Experimental", hybridClash },
+    { "Noisy Strike",    "Experimental", noisyStrike },
+    { "Vinyl Ghost",     "Experimental", vinylGhost },
+    { "Pulse Arp",       "Arp",          pulseArp },
+    { "Cascade Arp",     "Arp",          cascadeArp },
+    { "Rubber Band",     "Plucked",      rubberBand },
 };
 
 inline int numFactoryPresets() noexcept { return static_cast<int> (std::size (factory)); }

@@ -354,9 +354,8 @@ AethrEditor::~AethrEditor()
 void AethrEditor::applyPreset (int index)
 {
     currentPreset = juce::jlimit (0, presets::numFactoryPresets() - 1, index);
-    aethrProcessor.setFactoryPresetIndex (currentPreset);
     aethrProcessor.getUndoManager().beginNewTransaction ("AETHR preset");
-    presets::applyFactory (aethrProcessor.getValueTreeState(), currentPreset);
+    aethrProcessor.applyFactoryProgram (currentPreset);
     presetField.setText (presets::factory[static_cast<std::size_t> (currentPreset)].name,
                          presets::factory[static_cast<std::size_t> (currentPreset)].category);
     headerPulse = 0.55f;
@@ -848,6 +847,17 @@ void AethrEditor::timerCallback()
         randomButton.setToggleState (false, juce::dontSendNotification);
 
     updateSyncEnableState();
+
+    // Reflect host / MIDI program changes applied on the message thread.
+    const auto programIndex = aethrProcessor.getFactoryPresetIndex();
+
+    if (programIndex != currentPreset)
+    {
+        currentPreset = juce::jlimit (0, presets::numFactoryPresets() - 1, programIndex);
+        presetField.setText (presets::factory[static_cast<std::size_t> (currentPreset)].name,
+                             presets::factory[static_cast<std::size_t> (currentPreset)].category);
+        headerPulse = 0.35f;
+    }
 
     // Telemetry views animate every tick; chassis/footer only when chrome changes
     // or on a low-rate heartbeat (avoids full-editor storms at 36 Hz).

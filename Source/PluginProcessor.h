@@ -37,7 +37,8 @@ namespace aethr
 
     @see docs/ARCHITECTURE.md
 */
-class AethrProcessor final : public juce::AudioProcessor
+class AethrProcessor final : public juce::AudioProcessor,
+                             private juce::AsyncUpdater
 {
 public:
     AethrProcessor();
@@ -68,10 +69,10 @@ public:
     double getTailLengthSeconds() const override;
 
     //==============================================================================
-    int getNumPrograms() override                          { return 1; }
-    int getCurrentProgram() override                        { return 0; }
-    void setCurrentProgram (int) override                   {}
-    const juce::String getProgramName (int) override        { return {}; }
+    int getNumPrograms() override;
+    int getCurrentProgram() override;
+    void setCurrentProgram (int index) override;
+    const juce::String getProgramName (int index) override;
     void changeProgramName (int, const juce::String&) override {}
 
     //==============================================================================
@@ -114,6 +115,9 @@ public:
     /** Factory preset index shown in the editor; persisted with host state. */
     [[nodiscard]] int getFactoryPresetIndex() const noexcept { return factoryPresetIndex; }
     void setFactoryPresetIndex (int index) noexcept;
+
+    /** Apply a factory program (Init-then-apply). Message-thread safe. */
+    void applyFactoryProgram (int index);
 
     /**
         The engine, for tests that need to inspect tuning.
@@ -330,6 +334,8 @@ private:
     void applyOutputStage (juce::AudioBuffer<FloatType>& buffer);
 
     //==============================================================================
+    void handleAsyncUpdate() override;
+
     juce::UndoManager undoManager;
     juce::AudioProcessorValueTreeState valueTreeState;
     ParameterHandles handles;
@@ -371,6 +377,7 @@ private:
     std::atomic<double> hostTempoBpm     { 120.0 };
     std::atomic<int>   arpStep           { 0 };
     std::atomic<float> midiModWheel      { 0.0f };
+    std::atomic<int>   pendingProgramChange { -1 };
 
     int factoryPresetIndex { 0 };
     static constexpr const char* factoryPresetIndexProperty = "aethrFactoryPresetIndex";

@@ -123,7 +123,10 @@ AethrProcessor::AethrProcessor()
     resolveParameterHandles();
 }
 
-AethrProcessor::~AethrProcessor() = default;
+AethrProcessor::~AethrProcessor()
+{
+    cancelPendingUpdate();
+}
 
 void AethrProcessor::resolveParameterHandles()
 {
@@ -521,6 +524,43 @@ void AethrProcessor::setFactoryPresetIndex (int index) noexcept
     factoryPresetIndex = juce::jlimit (0, presets::numFactoryPresets() - 1, index);
 }
 
+void AethrProcessor::applyFactoryProgram (int index)
+{
+    setFactoryPresetIndex (index);
+    presets::applyFactory (valueTreeState, factoryPresetIndex);
+}
+
+int AethrProcessor::getNumPrograms()
+{
+    return presets::numFactoryPresets();
+}
+
+int AethrProcessor::getCurrentProgram()
+{
+    return factoryPresetIndex;
+}
+
+void AethrProcessor::setCurrentProgram (int index)
+{
+    applyFactoryProgram (index);
+}
+
+const juce::String AethrProcessor::getProgramName (int index)
+{
+    if (index < 0 || index >= presets::numFactoryPresets())
+        return {};
+
+    return presets::factory[static_cast<std::size_t> (index)].name;
+}
+
+void AethrProcessor::handleAsyncUpdate()
+{
+    const auto pending = pendingProgramChange.exchange (-1, std::memory_order_acq_rel);
+
+    if (pending >= 0)
+        applyFactoryProgram (pending);
+}
+
 engine::EngineType AethrProcessor::getSelectedEngineType() const noexcept
 {
     return engine::engineTypeFromIndex (
@@ -691,6 +731,13 @@ void AethrProcessor::handleMidiMessage (const juce::MidiMessage& message) noexce
     {
         midiModWheel.store (static_cast<float> (message.getControllerValue()) / 127.0f,
                             std::memory_order_relaxed);
+    }
+    else if (message.isProgramChange())
+    {
+        const auto program = juce::jlimit (0, presets::numFactoryPresets() - 1,
+                                           message.getProgramChangeNumber());
+        pendingProgramChange.store (program, std::memory_order_relaxed);
+        triggerAsyncUpdate();
     }
 }
 

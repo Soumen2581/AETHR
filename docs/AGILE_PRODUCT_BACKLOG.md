@@ -19,13 +19,22 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 
 | Field | Value |
 |-------|--------|
-| **Sprint** | 3 |
-| **Name** | AETHR Sound Quality |
-| **Goal** | Tighten DSP CPU contracts and prove mid-note engine switching is safe without weakening pitch/stability tests |
+| **Sprint** | 4 |
+| **Name** | AETHR Workflow |
+| **Goal** | Curated factory bank (≥50), scrollable category library, MIDI/host program change for factory presets |
 | **Dates** | 2026-09-08 → 2026-09-15 |
 | **Branch policy** | Prefer `fix/*` / `feature/*`; small focused commits on `master` only when risk is low and CI is green |
 
-### Sprint 3 stories
+### Sprint 4 stories
+
+| ID | Story | Priority | Status |
+|----|-------|----------|--------|
+| S4-1 | Factory bank ≥50 curated presets | P1 | DONE |
+| S4-2 | Scrollable category preset browser | P1 | DONE |
+| S4-3 | MIDI + host program change → factory presets | P2 | DONE |
+| S4-4 | Favorites | P3 | DEFERRED |
+
+### Sprint 3 stories (complete)
 
 | ID | Story | Priority | Status |
 |----|-------|----------|--------|
@@ -77,6 +86,7 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | B-2 | Synced delay in tail length | P1 | DONE | Sprint 1 |
 | B-3 | Delay time crossfade | P1 | DONE | Sprint 1 |
 | B-4 | Filter coeffs per-block not per-sample | P2 | DONE | Sprint 3 |
+| B-5 | Saturation oversampling | P2 | TODO | Accepted residual R5 |
 | B-6 | Separate chorus/phaser LFO phase | P2 | DONE | Sprint 3 |
 | B-7 | Stereo comb filter | P1 | DONE | Polish |
 | B-8 | Arp MidiBuffer capacity | P0 | DONE | 64 KiB |
@@ -112,8 +122,8 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | E-2 | Stronger Init default | P1 | DONE | |
 | E-3 | Musical randomize ranges | P1 | DONE | |
 | E-4 | Preset name/index in host state | P1 | DONE | Sprint 1 |
-| E-5 | Category browser / ≥50 bank | P2 | PARTIAL | Browser done Sprint 2; bank size Sprint 4 |
-| E-6 | Favorites | P3 | TODO | |
+| E-5 | Category browser / ≥50 bank | P2 | DONE | Sprint 4 — 61 factory + scroll |
+| E-6 | Favorites | P3 | TODO | Deferred Sprint 4 |
 
 ### EPIC F — Performance
 
@@ -129,7 +139,7 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 |----|------|---|--------|-------|
 | G-1 | Notes / velocity / sustain / pitch bend | P1 | DONE | Basic |
 | G-2 | CC1 mod wheel | P1 | DONE | Brightness; INSTALL docs |
-| G-3 | Aftertouch / program change | P3 | TODO | |
+| G-3 | Aftertouch / program change | P3 | PARTIAL | Program change Sprint 4; AT still open |
 | G-4 | Arp / sequencer verification | P1 | PARTIAL | Tests exist; UX polish later |
 
 ### EPIC H — Testing
@@ -138,7 +148,7 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 |----|------|---|--------|-------|
 | H-1 | Catch2 suite ~79 tests | P1 | DONE | CI |
 | H-2 | Factory leak test | P1 | DONE | |
-| H-3 | Held engine-switch test | P1 | TODO | |
+| H-3 | Held engine-switch test | P1 | DONE | Sprint 3 |
 | H-4 | Delay automation zipper test | P2 | TODO | With B-3 |
 | H-5 | pluginval in CI + release | P1 | DONE | |
 

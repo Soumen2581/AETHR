@@ -222,8 +222,9 @@ Rescan VST3 plug-ins (Ableton / FL / Cubase / Reaper / Bitwig), then restart the
 | Sustain pedal (CC64) | Hold |
 | Pitch bend | ±2 semitones |
 | Mod wheel (CC1) | Opens resonator / exciter brightness (live only; not written into presets) |
+| Program change | Selects factory preset 0…N−1 (same bank as Library / host programs) |
 
-Aftertouch and program change are not mapped yet.
+Aftertouch is not mapped yet.
 
 Company in the UI: **IXMUK** · Codes: manufacturer `Ixmk`, plugin `Aetr`
 
