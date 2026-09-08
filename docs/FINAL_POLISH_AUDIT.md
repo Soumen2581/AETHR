@@ -91,8 +91,13 @@ promises**, DSP/host contract bugs, and stale documentation — not by missing e
 
 ## Out of scope this pass (explicit)
 
-- Full ≥50 factory bank redesign  
+- Full ≥50 factory bank redesign — **done Sprint 4**  
 - Saturation oversampling (document limitation instead of fake claim)  
-- Codesign / notarization secrets  
+- Codesign / notarization secrets — **runbook ready Sprint 5; secrets still external**  
 - Rewriting all engines as unique physics cores  
 - Docker “deploy” (native plugin; DAW install is not containerized)
+
+## Agile close-out (2026-09-08)
+
+Sprints 1–5 complete. Product at **0.95.0 feature freeze**. See [`RELEASE.md`](RELEASE.md) and
+[`AGILE_PRODUCT_BACKLOG.md`](AGILE_PRODUCT_BACKLOG.md). Local suite **85/85**.

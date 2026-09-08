@@ -79,20 +79,47 @@ Install from artefacts using the commands in [`INSTALL.md`](INSTALL.md).
 Push a tag:
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.95.0
+git push origin v0.95.0
 ```
 
 The Release workflow builds both platforms with `cmake --preset ci`, tests, packages:
 
-- `AETHR-v0.1.0-macOS.zip`
-- `AETHR-v0.1.0-Windows.zip`
+- `AETHR-v0.95.0-macOS.zip`
+- `AETHR-v0.95.0-Windows.zip`
 
 and attaches them to the GitHub Release for that tag.
 
-The tag **must** match `project(AETHR VERSION …)` in `CMakeLists.txt` (e.g. tag `v0.1.0` ↔ `VERSION 0.1.0`). Mismatched tags fail the release job on purpose.
+The tag **must** match `project(AETHR VERSION …)` in `CMakeLists.txt` (e.g. tag `v0.95.0` ↔ `VERSION 0.95.0`). Mismatched tags fail the release job on purpose.
 
 `workflow_dispatch` can dry-run a package build without attaching assets (publish only runs on real `v*` tag pushes).
+
+Full RC procedure: [`RELEASE.md`](RELEASE.md).
+
+## Notarization / codesign (optional secrets)
+
+Release zips today are **unsigned / ad-hoc**. That is an accepted residual until Apple (and optionally Windows) signing material exists.
+
+When ready, add repository secrets (names are recommendations — wire them in `release.yml` before relying on them):
+
+| Secret | Purpose |
+|--------|---------|
+| `APPLE_DEVELOPER_ID_APPLICATION_CERT_P12` | Base64 Developer ID Application `.p12` |
+| `APPLE_DEVELOPER_ID_CERT_PASSWORD` | P12 password |
+| `APPLE_API_KEY` / `APPLE_API_KEY_ID` / `APPLE_API_ISSUER` | Notarytool API key |
+| `APPLE_TEAM_ID` | Team identifier |
+
+Suggested macOS Release steps (after packaging, before upload):
+
+1. Import the P12 into a temporary keychain  
+2. `codesign --deep --force --options runtime --sign "Developer ID Application: …"` each bundle  
+3. `ditto -c -k --keepParent` → submit with `xcrun notarytool submit … --wait`  
+4. `xcrun stapler staple` on the signed apps/bundles  
+5. Re-zip stapled artefacts  
+
+Do **not** commit certificates or API keys. Until secrets exist, keep INSTALL.md quarantine / Gatekeeper guidance accurate and mark Release assets as unsigned beta.
+
+Windows Authenticode is optional for 0.95; document if skipped.
 
 ## Diagnosing failures
 

@@ -1,19 +1,20 @@
-# Retrospective — Sprint 4
+# Retrospective — Sprint 5
 
 ## What went well?
 
-- Kept the first 13 factory indices stable so existing leak/state tests stayed valid
-- Scrollable library was required once the bank grew — shipped with the expansion
-- Host program API + MIDI PC share one apply path (Init-then-apply)
+- Freeze documented as a product rule, not only a version bump
+- Delay crossfade got a dedicated regression instead of relying on memory
+- Notarization path documented without committing secrets or fake CI that would fail
 
 ## What went poorly?
 
-Favorites deferred; aftertouch still open.
+CI on GitHub must still go green for the freeze commit after push; notarization remains blocked on secrets.
 
 ## Continue doing
 
-- Prefer message-thread preset apply via `AsyncUpdater` for MIDI-driven changes
+- Keep parameter IDs and `versionHint` frozen through 1.x
+- Prefer preflight script before every tag
 
 ## Next
 
-Sprint 5 release hardening — freeze features, ship checklist, notarization when secrets exist.
+Manual RC smoke → tag `v0.95.0` → 1.0 when signed/notarized (or explicitly ship unsigned with INSTALL notes).

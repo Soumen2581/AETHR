@@ -75,6 +75,7 @@ clean settings). Other engines are distinct character models — see
 |----------|----------|
 | **[INSTALL.md](docs/INSTALL.md)** | **How to install on macOS and Windows** |
 | **[CI.md](docs/CI.md)** | **GitHub Actions, local≈CI, releases, artefacts** |
+| **[RELEASE.md](docs/RELEASE.md)** | **0.95 feature freeze + RC checklist** |
 | **[FINAL_POLISH_AUDIT.md](docs/FINAL_POLISH_AUDIT.md)** | Final polish issue ranking |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Toolchain, signal flow, threading, parameters |
 | [DSP_ARCHITECTURE.md](docs/DSP_ARCHITECTURE.md) | Multi-engine contract and realtime rules |

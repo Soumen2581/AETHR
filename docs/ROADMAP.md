@@ -150,4 +150,14 @@ refine presets.
   (fractional MIDI notes throughout, no hard-coded 12), but it is not Phase 1–16 work.
 - **MPE note expression** — the voice architecture keeps per-note state so it can be added; the
   brief lists it as "where practical".
-- **Windows build** — portable by construction, unvalidated in practice.
+- **Saturation oversampling** — accepted residual R5; Soft default preferred.
+- **Apple notarization** — runbook ready; blocked on Developer ID / notary secrets.
+
+Windows VST3 + Standalone are validated in GitHub Actions CI (not “unvalidated”).
+
+---
+
+## Agile milestone (2026-09-08)
+
+Sprints 1–5 delivered foundation → visual → sound → workflow → **0.95 feature freeze**.
+Operating docs: [`AGILE_PRODUCT_BACKLOG.md`](AGILE_PRODUCT_BACKLOG.md), [`RELEASE.md`](RELEASE.md).

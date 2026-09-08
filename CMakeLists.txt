@@ -26,7 +26,7 @@ set(AETHR_MANUFACTURER_ID "Ixmk"                          CACHE STRING "4-charac
 set(AETHR_PLUGIN_ID       "Aetr"                          CACHE STRING "4-character plugin code (must start uppercase)")
 
 project(AETHR
-    VERSION 0.1.0
+    VERSION 0.95.0
     DESCRIPTION "${AETHR_PRODUCT_NAME} - ${AETHR_PRODUCT_TAGLINE}"
     LANGUAGES C CXX)
 

@@ -13,7 +13,7 @@ Last updated: 2026-09-08
 | TD-7 | Preset index only in editor | Wrong name after DAW reload | Medium | Persist in state XML | P1 | Closed (Sprint 1) |
 | TD-8 | Factory bank thin (13) | Weak first impression | Medium | Expand curated bank Sprint 4 | P2 | Closed (Sprint 4) |
 | TD-9 | Visualizers stylized not metered | Misleading if called “scopes” | Low | Honest labels or real telemetry | P2 | Mitigated (STATUS ART) |
-| TD-10 | Unsigned / un-notarized macOS zips | Gatekeeper friction | Medium | Secrets + notarize in release | P2 | Open |
+| TD-10 | Unsigned / un-notarized macOS zips | Gatekeeper friction | Medium | Secrets + notarize in release | P2 | Open (runbook ready) |
 | TD-11 | `RISKS.md` R10 stale (Windows never built) | Trust | Medium | Correct in Sprint 1 | P1 | Closed |
 | TD-12 | `getTailLengthSeconds` ignores synced delay resolution | Truncated offline bounce | High | Use `resolvedDelaySeconds` | P1 | Closed (Sprint 1) |
 | TD-13 | No MIDI CC1 / AT | Live expressiveness | Medium | Implement or document | P1 | Closed (Sprint 1) |

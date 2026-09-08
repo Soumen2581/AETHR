@@ -2,7 +2,7 @@
 
 Living backlog for https://github.com/Soumen2581/AETHR  
 Last updated: 2026-09-08  
-Milestone target: **AETHR 0.9 — Development Complete** → 0.95 Beta → 1.0 Release
+Milestone target: **AETHR 0.95 Beta (feature freeze)** → 1.0 Release
 
 Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 
@@ -19,13 +19,23 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 
 | Field | Value |
 |-------|--------|
-| **Sprint** | 4 |
-| **Name** | AETHR Workflow |
-| **Goal** | Curated factory bank (≥50), scrollable category library, MIDI/host program change for factory presets |
+| **Sprint** | 5 |
+| **Name** | AETHR Release Hardening |
+| **Goal** | Feature freeze at 0.95, RC checklist, notarization runbook, delay crossfade regression |
 | **Dates** | 2026-09-08 → 2026-09-15 |
 | **Branch policy** | Prefer `fix/*` / `feature/*`; small focused commits on `master` only when risk is low and CI is green |
 
-### Sprint 4 stories
+### Sprint 5 stories
+
+| ID | Story | Priority | Status |
+|----|-------|----------|--------|
+| S5-1 | Feature freeze at 0.95.0 | P0 | DONE |
+| S5-2 | Release candidate checklist (`docs/RELEASE.md`) | P1 | DONE |
+| S5-3 | Notarization / codesign runbook (secrets-ready) | P2 | DONE |
+| S5-4 | Delay automation zipper regression test | P2 | DONE |
+| S5-5 | Local release preflight script | P2 | DONE |
+
+### Sprint 4 stories (complete)
 
 | ID | Story | Priority | Status |
 |----|-------|----------|--------|
@@ -131,7 +141,7 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 |----|------|---|--------|-------|
 | F-1 | Voice pool on heap (Windows stack) | P0 | DONE | |
 | F-2 | BodyResonator coeff rebuild cost | P2 | TODO | Profile first |
-| F-3 | UI full repaint cost | P2 | TODO | |
+| F-3 | UI full repaint cost | P2 | DONE | Mitigated Sprint 2 scoped repaints |
 
 ### EPIC G — MIDI / Performance
 
@@ -146,10 +156,10 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 
 | ID | Item | P | Status | Notes |
 |----|------|---|--------|-------|
-| H-1 | Catch2 suite ~79 tests | P1 | DONE | CI |
+| H-1 | Catch2 suite ~85 tests | P1 | DONE | CI |
 | H-2 | Factory leak test | P1 | DONE | |
 | H-3 | Held engine-switch test | P1 | DONE | Sprint 3 |
-| H-4 | Delay automation zipper test | P2 | TODO | With B-3 |
+| H-4 | Delay automation zipper test | P2 | DONE | Sprint 5 |
 | H-5 | pluginval in CI + release | P1 | DONE | |
 
 ### EPIC I — CI/CD
@@ -159,7 +169,7 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 | I-1 | macOS + Windows matrix | P0 | DONE | |
 | I-2 | Manual CI vs push concurrency | P1 | DONE | |
 | I-3 | Release version gate + artefacts | P1 | DONE | |
-| I-4 | Codesign / notarization | P2 | TODO | Needs secrets |
+| I-4 | Codesign / notarization | P2 | PARTIAL | Runbook in CI.md/RELEASE.md; secrets still needed |
 
 ### EPIC J — Release
 
@@ -167,8 +177,8 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 |----|------|---|--------|-------|
 | J-1 | INSTALL / CI docs | P1 | DONE | |
 | J-2 | Final polish audit | P1 | DONE | |
-| J-3 | Feature freeze at 0.95 | — | TODO | Milestone |
-| J-4 | Release candidate checklist | P2 | TODO | |
+| J-3 | Feature freeze at 0.95 | — | DONE | VERSION 0.95.0 |
+| J-4 | Release candidate checklist | P2 | DONE | `docs/RELEASE.md` + preflight |
 
 ---
 
@@ -228,11 +238,14 @@ Status legend: `TODO` · `IN PROGRESS` · `BLOCKED` · `DONE`
 
 Never work P3 while P0 exists. Prefer **RISK × IMPACT**. Protect parameter IDs and realtime safety.
 
-## Next sprints (planned)
+## Sprint history
 
-| Sprint | Goal |
-|--------|------|
-| 2 | AETHR Visual System |
-| 3 | AETHR Sound Quality |
-| 4 | AETHR Workflow |
-| 5 | AETHR Release Hardening (feature freeze) |
+| Sprint | Goal | Status |
+|--------|------|--------|
+| 1 | Foundation | DONE |
+| 2 | Visual System | DONE |
+| 3 | Sound Quality | DONE |
+| 4 | Workflow | DONE |
+| 5 | Release Hardening (0.95 freeze) | DONE |
+
+**Post-freeze:** bugfix + packaging toward **1.0** per [`RELEASE.md`](RELEASE.md). No new features on the 0.95 line unless P0.

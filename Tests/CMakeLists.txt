@@ -26,7 +26,8 @@ set(AETHR_TEST_SOURCES
     ResonatorTests.cpp
     ExciterTests.cpp
     PitchTests.cpp
-    EngineTests.cpp)
+    EngineTests.cpp
+    FxRackTests.cpp)
 
 add_executable(AethrTests ${AETHR_TEST_SOURCES})
 
