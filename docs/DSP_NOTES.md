@@ -1,4 +1,4 @@
-# STRATA — DSP notes
+# AETHR — DSP notes
 
 Mathematical reference for the engine. Every formula here is either implemented in
 `Source/Core`/`Source/DSP` or is the specification a later phase implements against. Where a
@@ -148,7 +148,7 @@ g^{\,T_{60} f_s / D} = 10^{-3}
 \tag{7}
 \]
 
-Implemented as `strata::math::decayTimeToLoopGain`, with `loopGainToDecayTime` as its inverse.
+Implemented as `aethr::math::decayTimeToLoopGain`, with `loopGainToDecayTime` as its inverse.
 Both are pinned by *"Loop gain and T60 decay time are exact inverses"* and, more importantly, by
 *"Loop gain produces the requested 60 dB decay when iterated"*, which iterates the loop directly and
 checks the amplitude lands at −60 dB within 0.1 dB.

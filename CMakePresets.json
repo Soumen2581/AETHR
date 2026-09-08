@@ -13,7 +13,7 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "STRATA_BUILD_TESTS": "ON"
+        "AETHR_BUILD_TESTS": "ON"
       }
     },
     {
@@ -23,7 +23,7 @@
       "description": "Day-to-day development build: optimised enough to audition, with debug info and a strict warning policy.",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "STRATA_WARNINGS_AS_ERRORS": "ON"
+        "AETHR_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -33,7 +33,7 @@
       "description": "Unoptimised build with jassert live, for stepping through DSP and catching invalid coefficients.",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "STRATA_WARNINGS_AS_ERRORS": "ON"
+        "AETHR_WARNINGS_AS_ERRORS": "ON"
       }
     },
     {
@@ -43,7 +43,7 @@
       "description": "Fully optimised build with link-time optimisation. On macOS this produces an arm64 + x86_64 universal binary.",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "STRATA_WARNINGS_AS_ERRORS": "OFF"
+        "AETHR_WARNINGS_AS_ERRORS": "OFF"
       },
       "condition": {
         "type": "equals",
@@ -61,7 +61,7 @@
       "description": "Fully optimised single-architecture build. Use for profiling, where a universal binary only slows the build down.",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "STRATA_WARNINGS_AS_ERRORS": "OFF"
+        "AETHR_WARNINGS_AS_ERRORS": "OFF"
       }
     }
   ],

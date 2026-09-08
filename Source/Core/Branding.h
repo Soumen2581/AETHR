@@ -7,28 +7,28 @@
     product can be renamed by editing the build script alone. Nothing in the DSP
     or parameter layer may depend on these strings.
 */
-namespace strata::branding
+namespace aethr::branding
 {
 
-#ifndef STRATA_PRODUCT_NAME
-    #define STRATA_PRODUCT_NAME "STRATA"
+#ifndef AETHR_PRODUCT_NAME
+    #define AETHR_PRODUCT_NAME "AETHR"
 #endif
 
-#ifndef STRATA_PRODUCT_TAGLINE
-    #define STRATA_PRODUCT_TAGLINE "Physical Resonance Engine"
+#ifndef AETHR_PRODUCT_TAGLINE
+    #define AETHR_PRODUCT_TAGLINE "Physical Resonance Engine"
 #endif
 
-#ifndef STRATA_COMPANY_NAME
-    #define STRATA_COMPANY_NAME "BrainWavez"
+#ifndef AETHR_COMPANY_NAME
+    #define AETHR_COMPANY_NAME "Aethr Audio"
 #endif
 
-#ifndef STRATA_VERSION_STRING
-    #define STRATA_VERSION_STRING "0.0.0"
+#ifndef AETHR_VERSION_STRING
+    #define AETHR_VERSION_STRING "0.0.0"
 #endif
 
-inline constexpr const char* productName = STRATA_PRODUCT_NAME;
-inline constexpr const char* tagline     = STRATA_PRODUCT_TAGLINE;
-inline constexpr const char* companyName = STRATA_COMPANY_NAME;
-inline constexpr const char* version     = STRATA_VERSION_STRING;
+inline constexpr const char* productName = AETHR_PRODUCT_NAME;
+inline constexpr const char* tagline     = AETHR_PRODUCT_TAGLINE;
+inline constexpr const char* companyName = AETHR_COMPANY_NAME;
+inline constexpr const char* version     = AETHR_VERSION_STRING;
 
-} // namespace strata::branding
+} // namespace aethr::branding

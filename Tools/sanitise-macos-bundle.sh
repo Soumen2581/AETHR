@@ -48,6 +48,11 @@ sanitise_bundle() {
         # .DS_Store inside a bundle is an unsealed resource and fails verification.
         find "${bundle}" -name '.DS_Store' -delete 2>/dev/null
 
+        # iCloud Desktop/Documents create "Name 2" conflict copies inside the
+        # bundle. codesign then fails with "code object is not signed at all
+        # In subcomponent: .../PkgInfo 2" and hosts hide the plug-in.
+        find "${bundle}" \( -name '* 2' -o -name '* 2.*' \) -delete 2>/dev/null
+
         # Clear everything, then specifically remove the two attributes codesign
         # rejects, as close as possible to the signing call to narrow the race.
         # com.apple.provenance is tolerated by codesign and can be left alone.

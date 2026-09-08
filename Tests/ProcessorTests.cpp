@@ -12,7 +12,7 @@ namespace
     constexpr int outputChannels = 2;
 
     /** Prepares the processor for a stereo instrument configuration. */
-    void prepare (strata::StrataProcessor& processor, double sampleRate, int blockSize)
+    void prepare (aethr::AethrProcessor& processor, double sampleRate, int blockSize)
     {
         processor.setPlayConfigDetails (0, outputChannels, sampleRate, blockSize);
         processor.prepareToPlay (sampleRate, blockSize);
@@ -32,7 +32,7 @@ namespace
 
 TEST_CASE ("Bus layouts: instrument accepts mono and stereo output and no input", "[processor][buses]")
 {
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
 
     const auto layoutFor = [] (const juce::AudioChannelSet& outputSet)
     {
@@ -55,7 +55,7 @@ TEST_CASE ("Bus layouts: instrument accepts mono and stereo output and no input"
 
 TEST_CASE ("Processor reports the identity a host needs", "[processor]")
 {
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
 
     REQUIRE (processor.acceptsMidi());
     REQUIRE_FALSE (processor.producesMidi());
@@ -70,7 +70,7 @@ TEST_CASE ("Rendering is finite and silent-by-default at every supported sample 
 {
     for (const auto sampleRate : testSampleRates)
     {
-        strata::StrataProcessor processor;
+        aethr::AethrProcessor processor;
         prepare (processor, sampleRate, 512);
 
         juce::AudioBuffer<float> buffer (outputChannels, 512);
@@ -88,10 +88,11 @@ TEST_CASE ("Rendering is finite and silent-by-default at every supported sample 
             const auto* samples = buffer.getReadPointer (channel);
             const auto numSamples = static_cast<std::size_t> (buffer.getNumSamples());
 
-            REQUIRE_FALSE (strata::guards::containsNonFinite (samples, numSamples));
+            REQUIRE_FALSE (aethr::guards::containsNonFinite (samples, numSamples));
 
-            // Phase 1 has no engine yet, so the output must be exactly silent.
-            REQUIRE (strata::guards::peakMagnitude (samples, numSamples) == 0.0f);
+            // No MIDI, so no voices: the output must be exactly silent, and in
+            // particular must not still contain the rubbish the host left behind.
+            REQUIRE (aethr::guards::peakMagnitude (samples, numSamples) == 0.0f);
         }
     }
 }
@@ -100,7 +101,7 @@ TEST_CASE ("Rendering is stable across every supported block size", "[processor]
 {
     for (const auto blockSize : testBlockSizes)
     {
-        strata::StrataProcessor processor;
+        aethr::AethrProcessor processor;
         prepare (processor, 48000.0, blockSize);
 
         juce::AudioBuffer<float> buffer (outputChannels, blockSize);
@@ -110,7 +111,7 @@ TEST_CASE ("Rendering is stable across every supported block size", "[processor]
         processor.processBlock (buffer, midi);
 
         for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
-            REQUIRE_FALSE (strata::guards::containsNonFinite (buffer.getReadPointer (channel),
+            REQUIRE_FALSE (aethr::guards::containsNonFinite (buffer.getReadPointer (channel),
                                                              static_cast<std::size_t> (blockSize)));
 
         REQUIRE (processor.getMidiEventCount() == 4);
@@ -121,7 +122,7 @@ TEST_CASE ("A block larger than promised is handled without corrupting the outpu
 {
     // Some hosts occasionally exceed the maximum block size they declared. The
     // processor must cope without allocating and without emitting invalid audio.
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
     prepare (processor, 48000.0, 128);
 
     REQUIRE (processor.getBlockSizeOverrunCount() == 0);
@@ -133,7 +134,7 @@ TEST_CASE ("A block larger than promised is handled without corrupting the outpu
     processor.processBlock (oversized, midi);
 
     for (int channel = 0; channel < oversized.getNumChannels(); ++channel)
-        REQUIRE_FALSE (strata::guards::containsNonFinite (oversized.getReadPointer (channel),
+        REQUIRE_FALSE (aethr::guards::containsNonFinite (oversized.getReadPointer (channel),
                                                           static_cast<std::size_t> (oversized.getNumSamples())));
 
     // The fallback path must be observable rather than silent, so that a host
@@ -147,34 +148,58 @@ TEST_CASE ("A block larger than promised is handled without corrupting the outpu
     REQUIRE (processor.getBlockSizeOverrunCount() == 1);
 }
 
-TEST_CASE ("Double-precision rendering behaves identically to single precision", "[processor][dsp]")
+TEST_CASE ("Double-precision rendering works and ignores what the host left in the buffer", "[processor][dsp]")
 {
-    strata::StrataProcessor processor;
-    processor.setProcessingPrecision (juce::AudioProcessor::doublePrecision);
-    prepare (processor, 96000.0, 256);
+    constexpr int blockSize = 256;
 
-    juce::AudioBuffer<double> buffer (outputChannels, 256);
-
-    for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
-        for (int i = 0; i < buffer.getNumSamples(); ++i)
-            buffer.setSample (channel, i, 0.5);
-
-    juce::MidiBuffer midi = makeMidiSequence (256);
-    processor.processBlock (buffer, midi);
-
-    for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+    // Rendered twice with identical input: once into a buffer the host has left junk in,
+    // once into a cleared one. The engine is deterministic with a locked seed, so the two
+    // must agree exactly - which they only can if the junk was cleared rather than added to.
+    const auto render = [] (bool fillWithJunk)
     {
-        const auto* samples = buffer.getReadPointer (channel);
-        const auto numSamples = static_cast<std::size_t> (buffer.getNumSamples());
+        aethr::AethrProcessor processor;
+        processor.setProcessingPrecision (juce::AudioProcessor::doublePrecision);
 
-        REQUIRE_FALSE (strata::guards::containsNonFinite (samples, numSamples));
-        REQUIRE (strata::guards::peakMagnitude (samples, numSamples) == 0.0);
-    }
+        auto* seedLock = processor.getValueTreeState().getParameter (aethr::params::exciter::seedLocked);
+        REQUIRE (seedLock != nullptr);
+        seedLock->setValueNotifyingHost (1.0f);
+
+        processor.setPlayConfigDetails (0, outputChannels, 96000.0, blockSize);
+        processor.prepareToPlay (96000.0, blockSize);
+
+        juce::AudioBuffer<double> buffer (outputChannels, blockSize);
+        buffer.clear();
+
+        if (fillWithJunk)
+            for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+                for (int i = 0; i < blockSize; ++i)
+                    buffer.setSample (channel, i, 0.5);
+
+        auto midi = makeMidiSequence (blockSize);
+        processor.processBlock (buffer, midi);
+
+        std::vector<double> output;
+
+        for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+            for (int i = 0; i < blockSize; ++i)
+                output.push_back (buffer.getSample (channel, i));
+
+        return output;
+    };
+
+    const auto clean = render (false);
+    const auto dirty = render (true);
+
+    REQUIRE_FALSE (aethr::guards::containsNonFinite (clean.data(), clean.size()));
+
+    // Notes were played, so there must be audio to compare in the first place.
+    REQUIRE (aethr::guards::peakMagnitude (clean.data(), clean.size()) > 1.0e-4);
+    REQUIRE (clean == dirty);
 }
 
 TEST_CASE ("Repeated sample-rate and block-size changes are handled cleanly", "[processor][dsp][robustness]")
 {
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
 
     // Emulate a host switching audio devices mid-session, several times.
     for (const auto sampleRate : testSampleRates)
@@ -191,7 +216,7 @@ TEST_CASE ("Repeated sample-rate and block-size changes are handled cleanly", "[
             processor.releaseResources();
 
             for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
-                REQUIRE_FALSE (strata::guards::containsNonFinite (buffer.getReadPointer (channel),
+                REQUIRE_FALSE (aethr::guards::containsNonFinite (buffer.getReadPointer (channel),
                                                                  static_cast<std::size_t> (blockSize)));
         }
     }
@@ -199,12 +224,12 @@ TEST_CASE ("Repeated sample-rate and block-size changes are handled cleanly", "[
 
 TEST_CASE ("Output level parameter scales the output stage and reports a peak", "[processor][dsp]")
 {
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
     prepare (processor, 48000.0, 256);
 
-    // With no engine yet the peak must read zero regardless of the gain setting;
+    // With no notes playing the peak must read zero regardless of the gain setting;
     // this guards against the meter reporting phantom activity.
-    auto* gain = processor.getValueTreeState().getParameter (strata::params::output::gain);
+    auto* gain = processor.getValueTreeState().getParameter (aethr::params::output::gain);
     REQUIRE (gain != nullptr);
     gain->setValueNotifyingHost (gain->convertTo0to1 (12.0f));
 
@@ -219,7 +244,7 @@ TEST_CASE ("Output level parameter scales the output stage and reports a peak", 
 
 TEST_CASE ("An editor can be created and destroyed repeatedly", "[processor][ui]")
 {
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
 
     for (int i = 0; i < 3; ++i)
     {

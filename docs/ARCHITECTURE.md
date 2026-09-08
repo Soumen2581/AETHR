@@ -1,10 +1,10 @@
-# STRATA — Architecture
+# AETHR — Architecture
 
-**Product:** STRATA — Physical Resonance Engine
+**Product:** AETHR — Physical Resonance Engine
 **Type:** polyphonic virtual instrument (VST3 / AU / Standalone)
-**Status:** Phase 1 complete (skeleton, build system, parameter and state layer, test harness)
+**Status:** Multi-engine platform scaffolding. STRING (Karplus–Strong) is the shipped core.
 **Document owner:** DSP + architecture
-**Last verified against toolchain:** 16 August 2026
+**Last verified against toolchain:** 17 August 2026
 
 ---
 
@@ -23,7 +23,7 @@ There is no legacy code to preserve or migrate, so the layout below is chosen fr
 inherited. The user has shipped JUCE plugins before (`AstralRig.vst3`, `PsytranceVST.vst3` are
 installed in `~/Library/Audio/Plug-Ins`), and an earlier project on the Desktop used JUCE 8.0.2 with
 `FetchContent`. That prior project is *not* a dependency of this one; it was inspected only to
-confirm local conventions (CMake + FetchContent, `COPY_PLUGIN_AFTER_BUILD`, BrainWavez branding).
+confirm local conventions (CMake + FetchContent, `COPY_PLUGIN_AFTER_BUILD`, centralised branding).
 
 ### 1.1 Toolchain, verified empirically
 
@@ -116,7 +116,7 @@ rely on: `std::numbers`, designated initialisers, `constexpr` maths, `[[nodiscar
 
 ## 3. Product concept
 
-STRATA is a physical-modelling instrument built on a generalised, extended Karplus–Strong
+AETHR is a physical-modelling instrument built on a generalised, extended Karplus–Strong
 resonator. It is not a delay-with-feedback effect: the resonator is one stage in a chain designed
 so that plucked strings, struck metal, glass, tuned percussion, drones and deliberately unstable
 textures are all reachable from the same engine.
@@ -163,31 +163,37 @@ justifies it; any change must be recorded here with its measurement.
 ```
 CMakeLists.txt              Top-level build: branding, options, dependency pinning, plugin target
 CMakePresets.json           dev / debug / release / release-native presets
-cmake/StrataWarnings.cmake  Per-file strict warning policy (see §11.2)
+cmake/AethrWarnings.cmake  Per-file strict warning policy (see §11.2)
 External/JUCE/              Pinned JUCE checkout (git-ignored, reused by FetchContent)
 Source/
   PluginProcessor.{h,cpp}   AudioProcessor: parameters, state, bus layouts, output stage
-  PluginEditor.{h,cpp}      Editor shell and update discipline
+  PluginEditor.{h,cpp}      Chassis editor, engine taxonomy, visualisers
   Core/
     Branding.h              Product identity, injected from CMake
     AudioMath.h             Pitch/gain/decay maths, JUCE-free and unit-tested
     RealtimeGuards.h        NaN, denormal, feedback-ceiling and coefficient guards
+    TempoSync.h             Host tempo → synced rate/time
   Parameters/
     ParameterIDs.h          Stable IDs only — the host-facing contract
     ParameterLayout.{h,cpp} Ranges, names, groups, display formatting
-  DSP/                      (Phase 2+) Exciter, KarplusResonator, FractionalDelay, LoopFilter,
-                            Dispersion, BodyResonator, Nonlinear, Material, SafeFeedback
-  Voice/                    (Phase 8) Voice, VoiceManager
-  Modulation/               (Phase 9) ModulationMatrix, LFO, Envelope, RandomSource
-  Effects/                  (Phase 11) Filter, Saturation, Delay, Chorus, Phaser, Reverb, Dynamics
-  UI/                       (Phase 13) LookAndFeel, panels, visualisers
-  Presets/                  (Phase 12) PresetManager, factory bank
+  DSP/                      Shared primitives: KarplusResonator, Exciter, BodyResonator,
+                            FractionalDelay, LoopFilter, Dispersion, FxRack, Modulation
+  Engine/
+    EngineType.h            Catalogue and `engine.type` indices
+    EngineSettings.h        Per-block snapshot
+    KarplusStringEngine     Shipped STRING core
+    Voice / VoiceEngine     MIDI lifecycle and 64-voice pool
+  UI/                       Custom controls, engine strip, visualisers, preset browser
+  Presets/                  Factory bank, randomize/mutate
 Tests/                      Catch2 suite, linked against the shared-code target
-docs/                       This document and its companions
+docs/                       ARCHITECTURE, DSP_ARCHITECTURE, ENGINE_REFERENCE, PHYSICAL_MODELS, …
 ```
 
 `Source/Core` deliberately has no JUCE dependency beyond what it declares, so the maths and safety
 layers are testable in isolation and reusable.
+
+The multi-engine contract, fallback rules and next-engine gate are in
+[`DSP_ARCHITECTURE.md`](DSP_ARCHITECTURE.md) and [`ENGINE_REFERENCE.md`](ENGINE_REFERENCE.md).
 
 ---
 
@@ -248,7 +254,7 @@ gain is derived per note:
 g \;=\; 10^{-3 D / (T_{60} f_s)}
 \]
 
-(`strata::math::decayTimeToLoopGain`, unit-tested against a direct iteration of the loop). Decay is
+(`aethr::math::decayTimeToLoopGain`, unit-tested against a direct iteration of the loop). Decay is
 then perceptually consistent across the keyboard, and "damping"/"brightness" become genuinely
 independent controls that shape *which* partials die first rather than how long the note lasts.
 
@@ -369,9 +375,9 @@ compiled **into** our target using **our** compile options. Applying `-Wall -Wex
 -Wsign-conversion -Werror` at target level would therefore drown the build in warnings from
 framework code we do not own.
 
-Solution (`cmake/StrataWarnings.cmake`): JUCE's own curated set
+Solution (`cmake/AethrWarnings.cmake`): JUCE's own curated set
 (`juce::juce_recommended_warning_flags`) is linked at target level, and the aggressive set is applied
-**per source file** to files we maintain. `STRATA_WARNINGS_AS_ERRORS` adds `-Werror` to that
+**per source file** to files we maintain. `AETHR_WARNINGS_AS_ERRORS` adds `-Werror` to that
 per-file set and is ON in the `dev` and `debug` presets.
 
 ### 11.3 Presets

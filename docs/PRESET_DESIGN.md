@@ -1,4 +1,4 @@
-# STRATA — Preset design
+# AETHR — Preset design
 
 ## Purpose
 

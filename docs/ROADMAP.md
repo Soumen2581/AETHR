@@ -1,4 +1,8 @@
-# STRATA — Development roadmap
+# AETHR — Development roadmap
+
+STRING (Karplus–Strong) is the shipped flagship engine. The multi-engine platform
+(`engine.type`, `KarplusStringEngine`, taxonomy UI) is in place. Further engines are
+built one at a time against the gate in [`ENGINE_REFERENCE.md`](ENGINE_REFERENCE.md).
 
 Each phase ends with a **stable, committed checkpoint**. The gate for every phase is the same:
 build clean, tests pass, warnings read and resolved, DSP behaviour inspected, profiled where

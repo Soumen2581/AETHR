@@ -1,4 +1,4 @@
-# STRATA — Performance
+# AETHR — Performance
 
 ## Policy
 

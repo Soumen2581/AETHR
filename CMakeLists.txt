@@ -1,5 +1,5 @@
 # ==============================================================================
-#  STRATA - Physical Resonance Engine
+#  AETHR - Physical Resonance Engine
 #
 #  Build requirements (verified 2026-08-16 on the development machine):
 #    - CMake >= 3.25   (installed: 4.3.2)
@@ -17,17 +17,17 @@ cmake_minimum_required(VERSION 3.25)
 # Branding. Everything user-visible is derived from these values so the product
 # can be renamed without touching source code. See docs/ARCHITECTURE.md.
 # ------------------------------------------------------------------------------
-set(STRATA_PRODUCT_NAME    "STRATA"                        CACHE STRING "User-visible product name")
-set(STRATA_PRODUCT_TAGLINE "Physical Resonance Engine"     CACHE STRING "Subtitle shown in the UI")
-set(STRATA_COMPANY_NAME    "BrainWavez"                    CACHE STRING "Manufacturer name")
-set(STRATA_COMPANY_DOMAIN  "brainwavez.audio"              CACHE STRING "Manufacturer domain (reverse-DNS bundle IDs)")
-set(STRATA_BUNDLE_ID       "audio.brainwavez.strata"       CACHE STRING "macOS bundle identifier")
-set(STRATA_MANUFACTURER_ID "Bwvz"                          CACHE STRING "4-character manufacturer code (must start uppercase)")
-set(STRATA_PLUGIN_ID       "Strq"                          CACHE STRING "4-character plugin code (must start uppercase)")
+set(AETHR_PRODUCT_NAME    "AETHR"                        CACHE STRING "User-visible product name")
+set(AETHR_PRODUCT_TAGLINE "Physical Resonance Engine"     CACHE STRING "Subtitle shown in the UI")
+set(AETHR_COMPANY_NAME    "Aethr Audio"                  CACHE STRING "Manufacturer name")
+set(AETHR_COMPANY_DOMAIN  "aethraudio.com"               CACHE STRING "Manufacturer domain (reverse-DNS bundle IDs)")
+set(AETHR_BUNDLE_ID       "com.aethraudio.aethr"        CACHE STRING "macOS bundle identifier")
+set(AETHR_MANUFACTURER_ID "Aeth"                          CACHE STRING "4-character manufacturer code (must start uppercase)")
+set(AETHR_PLUGIN_ID       "Aetr"                          CACHE STRING "4-character plugin code (must start uppercase)")
 
-project(STRATA
+project(AETHR
     VERSION 0.1.0
-    DESCRIPTION "${STRATA_PRODUCT_NAME} - ${STRATA_PRODUCT_TAGLINE}"
+    DESCRIPTION "${AETHR_PRODUCT_NAME} - ${AETHR_PRODUCT_TAGLINE}"
     LANGUAGES C CXX)
 
 # ------------------------------------------------------------------------------
@@ -57,11 +57,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ------------------------------------------------------------------------------
 # Options
 # ------------------------------------------------------------------------------
-option(STRATA_BUILD_TESTS      "Build the offline DSP/state test suite" ON)
-option(STRATA_BUILD_STANDALONE "Build the standalone application"       ON)
-option(STRATA_BUILD_AU         "Build the Audio Unit (macOS only)"      ON)
-option(STRATA_WARNINGS_AS_ERRORS "Treat compiler warnings as errors (CI/dev)" OFF)
-option(STRATA_COPY_AFTER_BUILD "Install the plugin to the user plug-in folders after building" ON)
+option(AETHR_BUILD_TESTS      "Build the offline DSP/state test suite" ON)
+option(AETHR_BUILD_STANDALONE "Build the standalone application"       ON)
+option(AETHR_BUILD_AU         "Build the Audio Unit (macOS only)"      ON)
+option(AETHR_WARNINGS_AS_ERRORS "Treat compiler warnings as errors (CI/dev)" OFF)
+option(AETHR_COPY_AFTER_BUILD "Install the plugin to the user plug-in folders after building" ON)
 
 # ------------------------------------------------------------------------------
 # Dependencies
@@ -72,8 +72,8 @@ option(STRATA_COPY_AFTER_BUILD "Install the plugin to the user plug-in folders a
 # ------------------------------------------------------------------------------
 include(FetchContent)
 
-set(STRATA_JUCE_TAG "9.0.1" CACHE STRING "Exact JUCE git tag to build against")
-set(STRATA_CATCH2_TAG "v3.9.1" CACHE STRING "Exact Catch2 git tag to build against")
+set(AETHR_JUCE_TAG "9.0.1" CACHE STRING "Exact JUCE git tag to build against")
+set(AETHR_CATCH2_TAG "v3.9.1" CACHE STRING "Exact Catch2 git tag to build against")
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/External/JUCE/CMakeLists.txt"
         AND NOT DEFINED FETCHCONTENT_SOURCE_DIR_JUCE)
@@ -86,7 +86,7 @@ set(JUCE_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-    GIT_TAG        ${STRATA_JUCE_TAG}
+    GIT_TAG        ${AETHR_JUCE_TAG}
     GIT_SHALLOW    TRUE
     GIT_PROGRESS   TRUE
     SYSTEM)                     # treat JUCE headers as system headers so our
@@ -101,14 +101,14 @@ FetchContent_MakeAvailable(JUCE)
 # contraction is disabled to keep offline test renders bit-comparable across
 # compilers. This is a deliberate, documented decision (docs/DSP_NOTES.md).
 # ------------------------------------------------------------------------------
-include(cmake/StrataWarnings.cmake)
+include(cmake/AethrWarnings.cmake)
 
-add_library(strata_compile_options INTERFACE)
+add_library(aethr_compile_options INTERFACE)
 
 if(NOT MSVC)
-    target_compile_options(strata_compile_options INTERFACE -ffp-contract=off)
+    target_compile_options(aethr_compile_options INTERFACE -ffp-contract=off)
 else()
-    target_compile_options(strata_compile_options INTERFACE
+    target_compile_options(aethr_compile_options INTERFACE
         /fp:precise /Zc:__cplusplus /Zc:preprocessor /utf-8)
 endif()
 
@@ -119,25 +119,25 @@ endif()
 # target per format. The test suite links the shared-code target directly, so
 # JUCE modules are compiled exactly once.
 # ------------------------------------------------------------------------------
-set(STRATA_FORMATS VST3)
+set(AETHR_FORMATS VST3)
 
-if(STRATA_BUILD_STANDALONE)
-    list(APPEND STRATA_FORMATS Standalone)
+if(AETHR_BUILD_STANDALONE)
+    list(APPEND AETHR_FORMATS Standalone)
 endif()
 
-if(APPLE AND STRATA_BUILD_AU)
-    list(APPEND STRATA_FORMATS AU)
+if(APPLE AND AETHR_BUILD_AU)
+    list(APPEND AETHR_FORMATS AU)
 endif()
 
-juce_add_plugin(Strata
-    PRODUCT_NAME                "${STRATA_PRODUCT_NAME}"
-    COMPANY_NAME                "${STRATA_COMPANY_NAME}"
-    COMPANY_WEBSITE             "https://${STRATA_COMPANY_DOMAIN}"
-    BUNDLE_ID                   "${STRATA_BUNDLE_ID}"
-    PLUGIN_MANUFACTURER_CODE    "${STRATA_MANUFACTURER_ID}"
-    PLUGIN_CODE                 "${STRATA_PLUGIN_ID}"
-    DESCRIPTION                 "${STRATA_PRODUCT_TAGLINE}"
-    FORMATS                     ${STRATA_FORMATS}
+juce_add_plugin(Aethr
+    PRODUCT_NAME                "${AETHR_PRODUCT_NAME}"
+    COMPANY_NAME                "${AETHR_COMPANY_NAME}"
+    COMPANY_WEBSITE             "https://${AETHR_COMPANY_DOMAIN}"
+    BUNDLE_ID                   "${AETHR_BUNDLE_ID}"
+    PLUGIN_MANUFACTURER_CODE    "${AETHR_MANUFACTURER_ID}"
+    PLUGIN_CODE                 "${AETHR_PLUGIN_ID}"
+    DESCRIPTION                 "${AETHR_PRODUCT_TAGLINE}"
+    FORMATS                     ${AETHR_FORMATS}
     IS_SYNTH                    TRUE
     NEEDS_MIDI_INPUT            TRUE
     NEEDS_MIDI_OUTPUT           FALSE
@@ -145,15 +145,15 @@ juce_add_plugin(Strata
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     VST3_CATEGORIES             Instrument Synth
     AU_MAIN_TYPE                kAudioUnitType_MusicDevice
-    COPY_PLUGIN_AFTER_BUILD     ${STRATA_COPY_AFTER_BUILD}
+    COPY_PLUGIN_AFTER_BUILD     ${AETHR_COPY_AFTER_BUILD}
     MICROPHONE_PERMISSION_ENABLED FALSE
     HARDENED_RUNTIME_ENABLED    TRUE)
 
 add_subdirectory(Source)
 
-target_include_directories(Strata PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Source")
+target_include_directories(Aethr PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 
-target_compile_definitions(Strata
+target_compile_definitions(Aethr
     PUBLIC
         JUCE_WEB_BROWSER=0
         JUCE_USE_CURL=0
@@ -161,14 +161,14 @@ target_compile_definitions(Strata
         # JUCE 9 has no splash screen, so JUCE_DISPLAY_SPLASH_SCREEN is gone -
         # setting it produces a compiler warning.
         JUCE_STRICT_REFCOUNTEDPOINTER=1
-        STRATA_PRODUCT_NAME="${STRATA_PRODUCT_NAME}"
-        STRATA_PRODUCT_TAGLINE="${STRATA_PRODUCT_TAGLINE}"
-        STRATA_COMPANY_NAME="${STRATA_COMPANY_NAME}"
-        STRATA_VERSION_STRING="${PROJECT_VERSION}")
+        AETHR_PRODUCT_NAME="${AETHR_PRODUCT_NAME}"
+        AETHR_PRODUCT_TAGLINE="${AETHR_PRODUCT_TAGLINE}"
+        AETHR_COMPANY_NAME="${AETHR_COMPANY_NAME}"
+        AETHR_VERSION_STRING="${PROJECT_VERSION}")
 
-target_link_libraries(Strata
+target_link_libraries(Aethr
     PUBLIC
-        strata_compile_options
+        aethr_compile_options
         juce::juce_audio_utils
         juce::juce_dsp
         juce::juce_gui_basics
@@ -188,10 +188,10 @@ target_link_libraries(Strata
 # It is registered after juce_add_plugin() so it runs after JUCE's own copy step.
 # ------------------------------------------------------------------------------
 if(APPLE)
-    set(STRATA_SANITISE_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/Tools/sanitise-macos-bundle.sh")
+    set(AETHR_SANITISE_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/Tools/sanitise-macos-bundle.sh")
 
-    foreach(format IN LISTS STRATA_FORMATS)
-        set(format_target "Strata_${format}")
+    foreach(format IN LISTS AETHR_FORMATS)
+        set(format_target "Aethr_${format}")
 
         if(NOT TARGET ${format_target})
             continue()
@@ -201,13 +201,13 @@ if(APPLE)
         set(installed_copy "")
 
         if(format STREQUAL "VST3")
-            set(installed_copy "$ENV{HOME}/Library/Audio/Plug-Ins/VST3/${STRATA_PRODUCT_NAME}.vst3")
+            set(installed_copy "$ENV{HOME}/Library/Audio/Plug-Ins/VST3/${AETHR_PRODUCT_NAME}.vst3")
         elseif(format STREQUAL "AU")
-            set(installed_copy "$ENV{HOME}/Library/Audio/Plug-Ins/Components/${STRATA_PRODUCT_NAME}.component")
+            set(installed_copy "$ENV{HOME}/Library/Audio/Plug-Ins/Components/${AETHR_PRODUCT_NAME}.component")
         endif()
 
         add_custom_command(TARGET ${format_target} POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E env bash "${STRATA_SANITISE_SCRIPT}"
+            COMMAND "${CMAKE_COMMAND}" -E env bash "${AETHR_SANITISE_SCRIPT}"
                     "$<TARGET_BUNDLE_DIR:${format_target}>" ${installed_copy}
             VERBATIM
             COMMENT "Clearing quarantine and re-signing ${format_target}")
@@ -217,7 +217,7 @@ endif()
 # ------------------------------------------------------------------------------
 # Tests
 # ------------------------------------------------------------------------------
-if(STRATA_BUILD_TESTS)
+if(AETHR_BUILD_TESTS)
     enable_testing()
     add_subdirectory(Tests)
 endif()
@@ -226,10 +226,10 @@ endif()
 # Configuration summary
 # ------------------------------------------------------------------------------
 message(STATUS "")
-message(STATUS "${STRATA_PRODUCT_NAME} ${PROJECT_VERSION} - ${STRATA_PRODUCT_TAGLINE}")
-message(STATUS "  JUCE tag ........ ${STRATA_JUCE_TAG}")
+message(STATUS "${AETHR_PRODUCT_NAME} ${PROJECT_VERSION} - ${AETHR_PRODUCT_TAGLINE}")
+message(STATUS "  JUCE tag ........ ${AETHR_JUCE_TAG}")
 message(STATUS "  C++ standard .... C++${CMAKE_CXX_STANDARD}")
-message(STATUS "  Formats ......... ${STRATA_FORMATS}")
-message(STATUS "  Tests ........... ${STRATA_BUILD_TESTS} (Catch2 ${STRATA_CATCH2_TAG})")
-message(STATUS "  Warnings=errors . ${STRATA_WARNINGS_AS_ERRORS}")
+message(STATUS "  Formats ......... ${AETHR_FORMATS}")
+message(STATUS "  Tests ........... ${AETHR_BUILD_TESTS} (Catch2 ${AETHR_CATCH2_TAG})")
+message(STATUS "  Warnings=errors . ${AETHR_WARNINGS_AS_ERRORS}")
 message(STATUS "")

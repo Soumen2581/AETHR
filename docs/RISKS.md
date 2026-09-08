@@ -1,4 +1,4 @@
-# STRATA — Risk register
+# AETHR — Risk register
 
 Ordered by the product of likelihood and impact. Status is updated at each phase boundary.
 

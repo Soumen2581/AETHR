@@ -5,7 +5,7 @@
 
 #include "Core/RealtimeGuards.h"
 
-namespace guards = strata::guards;
+namespace guards = aethr::guards;
 
 namespace
 {

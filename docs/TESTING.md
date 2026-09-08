@@ -1,4 +1,4 @@
-# STRATA — Testing
+# AETHR — Testing
 
 ## Methodology
 
@@ -19,9 +19,9 @@ relevant, fix, commit**. A phase is not finished while any of those is outstandi
 
 ```bash
 ctest --preset dev                                  # everything
-./build/dev/Tests/StrataTests                       # direct, full output
-./build/dev/Tests/StrataTests "[pitch]"             # by tag
-./build/dev/Tests/StrataTests --list-tests
+./build/dev/Tests/AethrTests                       # direct, full output
+./build/dev/Tests/AethrTests "[pitch]"             # by tag
+./build/dev/Tests/AethrTests --list-tests
 ```
 
 Tags in use: `[math]`, `[pitch]`, `[gain]`, `[decay]`, `[guards]`, `[stability]`, `[parameters]`,
@@ -48,7 +48,7 @@ them.
 ### Deliberate exact-equality assertions
 
 The test sources compile with `-Wno-float-equal` (applied per file, see
-`cmake/StrataWarnings.cmake`). This is intentional: the guards promise to substitute *exactly* zero
+`cmake/AethrWarnings.cmake`). This is intentional: the guards promise to substitute *exactly* zero
 and the gain floor promises *exact* silence. Asserting "approximately zero" would let a real bug
 through — a guard that returned `1e-30` instead of `0` would pass an approximate check while still
 failing to stop a denormal.

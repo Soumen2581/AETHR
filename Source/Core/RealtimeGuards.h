@@ -27,7 +27,7 @@
 
     @see docs/DSP_NOTES.md, docs/TESTING.md
 */
-namespace strata::guards
+namespace aethr::guards
 {
 
 /** Magnitudes below this are treated as denormal and flushed to zero. */
@@ -139,4 +139,4 @@ template <typename FloatType>
     return std::isfinite (value) && value >= minimum && value <= maximum;
 }
 
-} // namespace strata::guards
+} // namespace aethr::guards

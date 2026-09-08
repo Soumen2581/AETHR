@@ -16,7 +16,7 @@
 
     @see docs/DSP_NOTES.md
 */
-namespace strata::math
+namespace aethr::math
 {
 
 inline constexpr double pi    = std::numbers::pi_v<double>;
@@ -164,4 +164,4 @@ template <typename FloatType>
     return -3.0 * delaySamples / (sampleRate * std::log10 (loopGain));
 }
 
-} // namespace strata::math
+} // namespace aethr::math

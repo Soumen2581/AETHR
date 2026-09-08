@@ -25,7 +25,7 @@ namespace
 
 TEST_CASE ("Every parameter is ranged, uniquely identified and consistently named", "[parameters]")
 {
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
 
     const auto& all = processor.getParameters();
     REQUIRE_FALSE (all.isEmpty());
@@ -51,7 +51,7 @@ TEST_CASE ("Every parameter is ranged, uniquely identified and consistently name
 
 TEST_CASE ("Parameter defaults lie inside their declared ranges", "[parameters]")
 {
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
 
     for (auto* parameter : rangedParameters (processor))
     {
@@ -74,17 +74,36 @@ TEST_CASE ("Parameter defaults lie inside their declared ranges", "[parameters]"
 
 TEST_CASE ("Known parameters exist under their published IDs", "[parameters]")
 {
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
     auto& apvts = processor.getValueTreeState();
 
     const char* const expected[]
     {
-        strata::params::output::gain,
-        strata::params::master::tuneOctave,
-        strata::params::master::tuneSemitones,
-        strata::params::master::tuneCents,
-        strata::params::voice::polyphony,
-        strata::params::voice::velocityAmount
+        aethr::params::output::gain,
+        aethr::params::master::tuneOctave,
+        aethr::params::master::tuneSemitones,
+        aethr::params::master::tuneCents,
+        aethr::params::voice::polyphony,
+        aethr::params::voice::velocityAmount,
+        aethr::params::resonator::feedback,
+        aethr::params::lfo1::sync,
+        aethr::params::lfo1::division,
+        aethr::params::fx::delaySync,
+        aethr::params::fx::chorusSync,
+        aethr::params::fx::phaserSync,
+        aethr::params::engine::type,
+        aethr::params::engine::controlA,
+        aethr::params::engine::controlB,
+        aethr::params::engine::controlC,
+        aethr::params::engine::controlD,
+        aethr::params::arp::enable,
+        aethr::params::arp::mode,
+        aethr::params::arp::division,
+        aethr::params::arp::octaves,
+        aethr::params::arp::gate,
+        aethr::params::arp::swing,
+        aethr::params::arp::latch,
+        aethr::params::arp::pattern
     };
 
     for (const auto* id : expected)
@@ -96,19 +115,19 @@ TEST_CASE ("Known parameters exist under their published IDs", "[parameters]")
 
 TEST_CASE ("Polyphony choice maps onto the documented voice counts", "[parameters][voices]")
 {
-    strata::StrataProcessor processor;
-    auto* polyphony = processor.getValueTreeState().getParameter (strata::params::voice::polyphony);
+    aethr::AethrProcessor processor;
+    auto* polyphony = processor.getValueTreeState().getParameter (aethr::params::voice::polyphony);
 
     REQUIRE (polyphony != nullptr);
 
     // Default must be the documented default index.
     REQUIRE (processor.getSelectedPolyphony()
-             == strata::params::polyphonyOptions[strata::params::defaultPolyphonyIndex]);
+             == aethr::params::polyphonyOptions[aethr::params::defaultPolyphonyIndex]);
 
-    for (int index = 0; index < strata::params::numPolyphonyOptions; ++index)
+    for (int index = 0; index < aethr::params::numPolyphonyOptions; ++index)
     {
         polyphony->setValueNotifyingHost (polyphony->convertTo0to1 (static_cast<float> (index)));
-        REQUIRE (processor.getSelectedPolyphony() == strata::params::polyphonyOptions[index]);
+        REQUIRE (processor.getSelectedPolyphony() == aethr::params::polyphonyOptions[index]);
     }
 }
 
@@ -119,18 +138,18 @@ TEST_CASE ("Plugin state survives a save and restore into a fresh instance", "[p
 
     const Setting settings[]
     {
-        { strata::params::output::gain,          -12.5f },
-        { strata::params::master::tuneOctave,     -1.0f },
-        { strata::params::master::tuneSemitones,   7.0f },
-        { strata::params::master::tuneCents,     -33.3f },
-        { strata::params::voice::polyphony,        3.0f },
-        { strata::params::voice::velocityAmount,  42.0f }
+        { aethr::params::output::gain,          -12.5f },
+        { aethr::params::master::tuneOctave,     -1.0f },
+        { aethr::params::master::tuneSemitones,   7.0f },
+        { aethr::params::master::tuneCents,     -33.3f },
+        { aethr::params::voice::polyphony,        3.0f },
+        { aethr::params::voice::velocityAmount,  42.0f }
     };
 
     juce::MemoryBlock savedState;
 
     {
-        strata::StrataProcessor source;
+        aethr::AethrProcessor source;
 
         for (const auto& setting : settings)
         {
@@ -143,7 +162,7 @@ TEST_CASE ("Plugin state survives a save and restore into a fresh instance", "[p
         REQUIRE (savedState.getSize() > 0);
     }
 
-    strata::StrataProcessor destination;
+    aethr::AethrProcessor destination;
     destination.setStateInformation (savedState.getData(), static_cast<int> (savedState.getSize()));
 
     for (const auto& setting : settings)
@@ -156,13 +175,13 @@ TEST_CASE ("Plugin state survives a save and restore into a fresh instance", "[p
 
 TEST_CASE ("Malformed or foreign state is rejected without changing current values", "[parameters][state]")
 {
-    strata::StrataProcessor processor;
+    aethr::AethrProcessor processor;
 
-    auto* gain = processor.getValueTreeState().getParameter (strata::params::output::gain);
+    auto* gain = processor.getValueTreeState().getParameter (aethr::params::output::gain);
     REQUIRE (gain != nullptr);
     gain->setValueNotifyingHost (gain->convertTo0to1 (-9.0f));
 
-    const auto valueBefore = processor.getValueTreeState().getRawParameterValue (strata::params::output::gain)->load();
+    const auto valueBefore = processor.getValueTreeState().getRawParameterValue (aethr::params::output::gain)->load();
 
     SECTION ("empty buffer")
     {
@@ -185,6 +204,6 @@ TEST_CASE ("Malformed or foreign state is rejected without changing current valu
         processor.setStateInformation (block.getData(), static_cast<int> (block.getSize()));
     }
 
-    const auto valueAfter = processor.getValueTreeState().getRawParameterValue (strata::params::output::gain)->load();
+    const auto valueAfter = processor.getValueTreeState().getRawParameterValue (aethr::params::output::gain)->load();
     REQUIRE (valueAfter == Approx (valueBefore));
 }

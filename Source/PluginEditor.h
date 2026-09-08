@@ -2,59 +2,99 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_gui_basics/juce_gui_basics.h>
+#include <memory>
+#include <vector>
 
-namespace strata
+#include "Engine/EngineType.h"
+#include "UI/ArpStrip.h"
+#include "UI/Controls.h"
+#include "UI/EngineBrowser.h"
+#include "UI/LookAndFeel.h"
+#include "UI/PresetBrowser.h"
+#include "UI/Visualizers.h"
+
+namespace aethr
 {
 
-class StrataProcessor;
+class AethrProcessor;
 
-/**
-    Phase 1 editor.
-
-    Deliberately minimal: it establishes the visual language (dark instrument
-    panel, restrained accent colour, engineering typography) and the update
-    discipline that the full interface will follow, without pre-committing to a
-    layout that the DSP work has not yet justified.
-
-    UI performance rules already enforced here:
-
-      - a single timer drives all animation, at a fixed modest rate
-      - only the regions whose data changed are repainted, never the whole editor
-      - the audio thread is never called into; the editor polls atomics
-
-    The complete interface, including the resonator and spectrum visualisers,
-    arrives in Phase 13.
-
-    @see docs/ARCHITECTURE.md ("UI architecture")
-*/
-class StrataEditor final : public juce::AudioProcessorEditor,
-                           private juce::Timer
+class AethrEditor final : public juce::AudioProcessorEditor,
+                          private juce::Timer
 {
 public:
-    explicit StrataEditor (StrataProcessor&);
-    ~StrataEditor() override;
+    explicit AethrEditor (AethrProcessor&);
+    ~AethrEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
     void timerCallback() override;
+    void applyPreset (int index);
+    void showBrowser (bool show);
+    void pulseLaboratory();
 
-    /** Bounds of the level meter, so the timer can repaint just that strip. */
-    [[nodiscard]] juce::Rectangle<int> getMeterBounds() const;
+    AethrProcessor& aethrProcessor;
+    ui::LookAndFeel lookAndFeel;
+    juce::TooltipWindow tooltipWindow { this, 700 };
 
-    /** Bounds of the status line showing MIDI activity. */
-    [[nodiscard]] juce::Rectangle<int> getStatusBounds() const;
+    ui::AethrPresetField presetField;
+    ui::AethrPlate initButton { "INIT" };
+    ui::AethrPlate saveButton { "SAVE" };
+    ui::AethrPlate randomButton { "RAND" };
+    ui::AethrPlate mutateButton { "MUTATE" };
+    ui::AethrPlate undoButton { "UNDO" };
+    ui::AethrPlate redoButton { "REDO" };
+    juce::ComboBox laboratoryBox;
+    ui::AethrEngineStrip engineStrip;
+    ui::AethrArpStrip arpStrip;
 
-    // Named to avoid shadowing AudioProcessorEditor::processor, which is a
-    // reference to the base AudioProcessor type.
-    StrataProcessor& strataProcessor;
+    ui::AethrPanel exciterSection  { "EXCITER",    "EXCITATION SYSTEM",     ui::Glyph::impulse,    "SRC / 01", ui::Rank::major };
+    ui::AethrPanel resonatorSection{ "RESONATOR",  "PHYSICAL MODEL CORE",   ui::Glyph::resonator,  "RES / 02", ui::Rank::hero };
+    ui::AethrPanel materialSection { "BODY",       "RESONANT STRUCTURE",    ui::Glyph::body,       "BDY / 03", ui::Rank::major };
+    ui::AethrPanel filterSection   { "FILTER",     "SPECTRAL GATE",         ui::Glyph::filter,     "FLT / 04", ui::Rank::minor };
+    ui::AethrPanel driveSection    { "DRIVE",      "NONLINEAR STAGE",       ui::Glyph::drive,      "DRV / 05", ui::Rank::minor };
+    ui::AethrPanel layerSection    { "LAYERS",     "DUAL ORBIT",            ui::Glyph::layers,     "LYR / 06", ui::Rank::minor };
+    ui::AethrPanel macroSection    { "MACROS",     "PERFORMANCE CORE",      ui::Glyph::macros,     "MCR / 07", ui::Rank::major };
+    ui::AethrPanel modSection      { "MODULATION", "ROUTING MATRIX",        ui::Glyph::modulation, "MOD / 08", ui::Rank::major };
+    ui::AethrPanel delaySection    { "DELAY",      "SYNCED STEREO TIME",     ui::Glyph::delay,      "DLY / 09", ui::Rank::minor };
+    ui::AethrPanel motionSection   { "MOTION",     "SYNCED CHORUS / PHASER", ui::Glyph::motion,     "MOT / 10", ui::Rank::minor };
+    ui::AethrPanel reverbSection   { "CHAMBER",    "SPATIAL FIELD",         ui::Glyph::chamber,    "CMB / 11", ui::Rank::minor };
+    ui::AethrPanel outputSection   { "MASTER",     "OUTPUT STAGE",          ui::Glyph::master,     "MST / 12", ui::Rank::major };
 
-    /** Decayed peak level, so the meter falls smoothly instead of flickering. */
+    ui::ExciterView     exciterView;
+    ui::ResonatorView   resonatorView;
+    ui::BodyView        bodyView;
+    ui::FilterView      filterView;
+    ui::DriveView       driveView;
+    ui::LayerView       layerView;
+    ui::LfoView         lfo1View;
+    ui::LfoView         lfo2View;
+    ui::DelayView       delayView;
+    ui::MotionView      motionView;
+    ui::ChamberView     chamberView;
+    ui::MeterView       meterView;
+    ui::ModulationMatrix modMatrix;
+    ui::AethrPresetBrowser browser;
+
+    std::vector<std::unique_ptr<ui::AethrKnob>> knobs;
+    std::vector<std::unique_ptr<ui::AethrCombo>> combos;
+    std::vector<std::unique_ptr<ui::AethrToggle>> toggles;
+
+    ui::AethrKnob* engineControlA { nullptr };
+    ui::AethrKnob* engineControlB { nullptr };
+    ui::AethrKnob* engineControlC { nullptr };
+    ui::AethrKnob* engineControlD { nullptr };
+    engine::EngineType displayedEngine { engine::EngineType::string };
+
+    int currentPreset { 0 };
     float displayedLevel { 0.0f };
-    int   displayedMidiCount { 0 };
+    float headerPulse { 0.0f };
+    int displayedVoices { 0 };
+    bool applyingMaterial { false };
+    juce::Random rng { 0xae711u };
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StrataEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AethrEditor)
 };
 
-} // namespace strata
+} // namespace aethr

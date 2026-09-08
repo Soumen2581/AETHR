@@ -1,9 +1,9 @@
-# STRATA — Physical Resonance Engine
+# AETHR — Physical Resonance Engine
 
 A polyphonic physical-modelling instrument built around an extended Karplus–Strong resonator.
 VST3, Audio Unit and Standalone.
 
-STRATA is designed to reach plucked strings, metallic resonances, tuned percussion, bells, mallets,
+AETHR is designed to reach plucked strings, metallic resonances, tuned percussion, bells, mallets,
 glassy tones, organic acoustic textures, evolving drones, aggressive distorted resonances, clean
 musical basses and deliberately unstable experimental material — from one engine, because the
 resonator's tuning, decay and timbre are independently controllable rather than tangled together.
@@ -20,7 +20,7 @@ because the loop filter, the tuning allpass and the dispersion chain each add th
 about one to two samples in total. At C8 and 48 kHz the period is only 11.5 samples, so the error is
 roughly **230 cents**, more than a whole tone.
 
-STRATA solves the full resonance condition instead, compensating for every element in the loop, and
+AETHR solves the full resonance condition instead, compensating for every element in the loop, and
 derives its feedback gain from a target 60 dB decay *time* rather than exposing a raw feedback number.
 The result is pitch that tracks accurately across the whole keyboard and decay that behaves the same
 way at the top of the range as at the bottom. The mathematics is in

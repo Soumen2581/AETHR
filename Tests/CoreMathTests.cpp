@@ -1,10 +1,13 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <limits>
+
 #include "Core/AudioMath.h"
+#include "Core/TempoSync.h"
 
 using Catch::Approx;
-namespace math = strata::math;
+namespace math = aethr::math;
 
 TEST_CASE ("MIDI note to frequency matches 12-TET reference values", "[math][pitch]")
 {
@@ -117,4 +120,23 @@ TEST_CASE ("Degenerate decay arguments fail safe rather than producing infinitie
     REQUIRE (math::decayTimeToLoopGain (1.0, 0.0, 48000.0) == 0.0);
     REQUIRE (math::decayTimeToLoopGain (1.0, 100.0, 0.0) == 0.0);
     REQUIRE (std::isfinite (math::decayTimeToLoopGain (1.0e9, 1.0, 48000.0)));
+}
+
+TEST_CASE ("Musical divisions convert to seconds and hertz against tempo", "[math][tempo]")
+{
+    namespace sync = aethr::sync;
+
+    REQUIRE (sync::seconds (sync::defaultDivisionIndex, 120.0) == Approx (0.5).epsilon (1.0e-12));
+    REQUIRE (sync::hertz (sync::defaultDivisionIndex, 120.0) == Approx (2.0).epsilon (1.0e-12));
+    REQUIRE (sync::seconds (3, 120.0) == Approx (0.25).epsilon (1.0e-12));   // 1/8
+    REQUIRE (sync::hertz (3, 120.0) == Approx (4.0).epsilon (1.0e-12));
+    REQUIRE (sync::seconds (7, 120.0) == Approx (0.75).epsilon (1.0e-12));   // 1/4 dotted
+    REQUIRE (sync::seconds (11, 120.0) == Approx (1.0 / 3.0).epsilon (1.0e-12)); // 1/4 triplet
+    REQUIRE (sync::hertz (11, 120.0) == Approx (3.0).epsilon (1.0e-12));
+
+    REQUIRE (sync::clampBpm (0.0) == sync::minBpm);
+    REQUIRE (sync::clampBpm (1000.0) == sync::maxBpm);
+    REQUIRE (sync::clampBpm (std::numeric_limits<double>::quiet_NaN()) == sync::defaultBpm);
+
+    REQUIRE (sync::delaySeconds (0, 20.0) == Approx (sync::maxDelaySeconds).epsilon (1.0e-12));
 }
