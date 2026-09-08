@@ -58,7 +58,7 @@
       "name": "release-native",
       "inherits": "base",
       "displayName": "Release (shipping, host architecture only)",
-      "description": "Fully optimised single-architecture build. Use for profiling, where a universal binary only doubles build time.",
+      "description": "Fully optimised single-architecture build. Use for profiling, where a universal binary only slows the build down.",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "AETHR_WARNINGS_AS_ERRORS": "OFF"
@@ -86,7 +86,8 @@
     { "name": "dev", "configurePreset": "dev" },
     { "name": "debug", "configurePreset": "debug" },
     { "name": "release", "configurePreset": "release" },
-    { "name": "release-native", "configurePreset": "release-native" }
+    { "name": "release-native", "configurePreset": "release-native" },
+    { "name": "windows", "configurePreset": "windows" }
   ],
   "testPresets": [
     {
@@ -98,6 +99,12 @@
     {
       "name": "debug",
       "configurePreset": "debug",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    },
+    {
+      "name": "windows",
+      "configurePreset": "windows",
       "output": { "outputOnFailure": true },
       "execution": { "noTestsAction": "error", "stopOnFailure": false }
     }

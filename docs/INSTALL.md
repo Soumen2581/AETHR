@@ -11,31 +11,9 @@ Audio Unit is Apple-only. On Windows you use **VST3** (or the Standalone app).
 
 ---
 
-## Option A — Install a CI build (easiest)
+## macOS — install with Terminal
 
-Every push to `master` builds both platforms:
-
-1. Open **[Actions](https://github.com/Soumen2581/AETHR/actions)**.
-2. Open the latest green **CI** run.
-3. Under **Artifacts**, download:
-   - `AETHR-macOS` → VST3, AU, Standalone zips  
-   - `AETHR-Windows` → VST3 and Standalone zips  
-4. Unzip, then follow the platform steps below.
-
-Artefacts expire after GitHub’s retention period; for a lasting copy, keep the zip yourself or cut a Release later.
-
----
-
-## Option B — Build from source
-
-### Shared requirements
-
-- CMake **≥ 3.25**
-- A **C++23** compiler (Apple Clang / MSVC 19.4x)
-- **Ninja** recommended
-- Internet on first configure (JUCE + Catch2 are fetched automatically)
-
-### macOS
+### 1) Build (from the repo root)
 
 ```bash
 cmake --preset dev
@@ -43,117 +21,210 @@ cmake --build --preset dev
 ctest --preset dev
 ```
 
-Built plugins land in:
+### 2) Install VST3 + AU into your user plug-in folders
 
-```text
-build/dev/Aethr_artefacts/RelWithDebInfo/VST3/AETHR.vst3
-build/dev/Aethr_artefacts/RelWithDebInfo/AU/AETHR.component
-build/dev/Aethr_artefacts/RelWithDebInfo/Standalone/AETHR.app
+```bash
+# From the AETHR repo root
+ART="build/dev/Aethr_artefacts/RelWithDebInfo"
+
+mkdir -p "$HOME/Library/Audio/Plug-Ins/VST3"
+mkdir -p "$HOME/Library/Audio/Plug-Ins/Components"
+mkdir -p "$HOME/Applications"
+
+# Replace any previous install
+rm -rf "$HOME/Library/Audio/Plug-Ins/VST3/AETHR.vst3"
+rm -rf "$HOME/Library/Audio/Plug-Ins/Components/AETHR.component"
+
+cp -R "$ART/VST3/AETHR.vst3" \
+  "$HOME/Library/Audio/Plug-Ins/VST3/"
+
+cp -R "$ART/AU/AETHR.component" \
+  "$HOME/Library/Audio/Plug-Ins/Components/"
+
+# Optional: Standalone app
+cp -R "$ART/Standalone/AETHR.app" \
+  "$HOME/Applications/"
+
+# Clear quarantine / fix ad-hoc signature (needed on some Macs)
+./Tools/sanitise-macos-bundle.sh \
+  "$HOME/Library/Audio/Plug-Ins/VST3/AETHR.vst3" \
+  "$HOME/Library/Audio/Plug-Ins/Components/AETHR.component" \
+  "$HOME/Applications/AETHR.app"
+
+# Confirm they landed
+ls -la "$HOME/Library/Audio/Plug-Ins/VST3/AETHR.vst3"
+ls -la "$HOME/Library/Audio/Plug-Ins/Components/AETHR.component"
 ```
 
-With `AETHR_COPY_AFTER_BUILD=ON` (default on macOS), they are also copied into your user plug-in folders (see paths below). After a UI rebuild, **remove and re-add** the device in the DAW — many hosts cache the editor binary.
+### 3) Or install from a downloaded CI zip
 
-### Windows
+After downloading `AETHR-macOS-VST3.zip` / `AETHR-macOS-AU.zip` from
+[Actions](https://github.com/Soumen2581/AETHR/actions) into `~/Downloads`:
 
-Use an **x64 Native Tools Command Prompt** (or run `vcvars64.bat` first):
+```bash
+mkdir -p "$HOME/Library/Audio/Plug-Ins/VST3"
+mkdir -p "$HOME/Library/Audio/Plug-Ins/Components"
+
+# Adjust the zip names if yours differ
+unzip -o "$HOME/Downloads/AETHR-macOS-VST3.zip" -d /tmp/aethr-mac
+unzip -o "$HOME/Downloads/AETHR-macOS-AU.zip" -d /tmp/aethr-mac
+
+rm -rf "$HOME/Library/Audio/Plug-Ins/VST3/AETHR.vst3"
+rm -rf "$HOME/Library/Audio/Plug-Ins/Components/AETHR.component"
+
+# Find the bundles inside the unzipped tree and install them
+find /tmp/aethr-mac -name 'AETHR.vst3' -type d -maxdepth 3 \
+  -exec cp -R {} "$HOME/Library/Audio/Plug-Ins/VST3/" \;
+find /tmp/aethr-mac -name 'AETHR.component' -type d -maxdepth 3 \
+  -exec cp -R {} "$HOME/Library/Audio/Plug-Ins/Components/" \;
+
+xattr -cr "$HOME/Library/Audio/Plug-Ins/VST3/AETHR.vst3" \
+          "$HOME/Library/Audio/Plug-Ins/Components/AETHR.component" 2>/dev/null || true
+```
+
+### 4) Rescan in your DAW
+
+Ableton Live example — Preferences → Plug-Ins → **Rescan**.  
+Then **remove and re-add** AETHR on the track so the editor reloads.
+
+Logic Pro (AU check):
+
+```bash
+auval -v aumu Aetr Ixmk
+```
+
+---
+
+## Windows — install with Command Prompt / PowerShell
+
+Use **Command Prompt**, **PowerShell**, or **x64 Native Tools Command Prompt**.
+
+### 1) Build (from the repo root)
+
+In an **x64 Native Tools** shell (or after `vcvars64.bat`):
 
 ```bat
+cd /d C:\path\to\AETHR
 cmake --preset windows
 cmake --build --preset windows
 ctest --preset windows
 ```
 
-Or without presets:
+### 2) Install VST3 (Command Prompt)
 
 ```bat
-cmake -S . -B build\ci -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo ^
-  -DAETHR_WARNINGS_AS_ERRORS=ON -DAETHR_COPY_AFTER_BUILD=OFF -DAETHR_BUILD_AU=OFF
-cmake --build build\ci --parallel
-ctest --test-dir build\ci --output-on-failure
+:: From the AETHR repo root
+set ART=build\windows\Aethr_artefacts\RelWithDebInfo
+set VST3DIR=%CommonProgramFiles%\VST3
+
+if not exist "%VST3DIR%" mkdir "%VST3DIR%"
+if exist "%VST3DIR%\AETHR.vst3" rmdir /s /q "%VST3DIR%\AETHR.vst3"
+
+xcopy /E /I /Y "%ART%\VST3\AETHR.vst3" "%VST3DIR%\AETHR.vst3"
+
+:: Optional: Standalone
+if not exist "%ProgramFiles%\ixmuk\AETHR" mkdir "%ProgramFiles%\ixmuk\AETHR"
+copy /Y "%ART%\Standalone\AETHR.exe" "%ProgramFiles%\ixmuk\AETHR\AETHR.exe"
+
+dir "%VST3DIR%\AETHR.vst3"
 ```
 
-Built plugins land in:
+> `C:\Program Files\...` needs an **Administrator** Command Prompt.  
+> For a per-user install (no admin):
 
-```text
-build\windows\Aethr_artefacts\RelWithDebInfo\VST3\AETHR.vst3
-build\windows\Aethr_artefacts\RelWithDebInfo\Standalone\AETHR.exe
+```bat
+set ART=build\windows\Aethr_artefacts\RelWithDebInfo
+set VST3DIR=%LOCALAPPDATA%\Programs\Common\VST3
+
+if not exist "%VST3DIR%" mkdir "%VST3DIR%"
+if exist "%VST3DIR%\AETHR.vst3" rmdir /s /q "%VST3DIR%\AETHR.vst3"
+xcopy /E /I /Y "%ART%\VST3\AETHR.vst3" "%VST3DIR%\AETHR.vst3"
 ```
 
-(Use `build\ci\...` if you used the `-B build\ci` commands above.)
+Then add that folder in your DAW’s VST3 search paths if it isn’t listed already.
+
+### 3) Same install in PowerShell
+
+```powershell
+# From the AETHR repo root (admin if installing under Program Files)
+$art = "build\windows\Aethr_artefacts\RelWithDebInfo"
+$vst3 = "$env:CommonProgramFiles\VST3"
+
+New-Item -ItemType Directory -Force -Path $vst3 | Out-Null
+Remove-Item -Recurse -Force "$vst3\AETHR.vst3" -ErrorAction SilentlyContinue
+Copy-Item -Recurse -Force "$art\VST3\AETHR.vst3" "$vst3\AETHR.vst3"
+
+New-Item -ItemType Directory -Force -Path "$env:ProgramFiles\ixmuk\AETHR" | Out-Null
+Copy-Item -Force "$art\Standalone\AETHR.exe" "$env:ProgramFiles\ixmuk\AETHR\AETHR.exe"
+
+Get-ChildItem "$vst3\AETHR.vst3"
+```
+
+### 4) Or install from a downloaded CI zip (PowerShell)
+
+```powershell
+# After downloading AETHR-Windows-VST3.zip from Actions into Downloads
+$zip = "$env:USERPROFILE\Downloads\AETHR-Windows-VST3.zip"
+$tmp = "$env:TEMP\aethr-win"
+$vst3 = "$env:CommonProgramFiles\VST3"   # use $env:LOCALAPPDATA\Programs\Common\VST3 for user install
+
+Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+Expand-Archive -Path $zip -DestinationPath $tmp -Force
+
+New-Item -ItemType Directory -Force -Path $vst3 | Out-Null
+Remove-Item -Recurse -Force "$vst3\AETHR.vst3" -ErrorAction SilentlyContinue
+
+$bundle = Get-ChildItem -Path $tmp -Filter "AETHR.vst3" -Directory -Recurse | Select-Object -First 1
+Copy-Item -Recurse -Force $bundle.FullName "$vst3\AETHR.vst3"
+
+Get-ChildItem "$vst3\AETHR.vst3"
+```
+
+### 5) Rescan in your DAW
+
+Rescan VST3 plug-ins (Ableton / FL / Cubase / Reaper / Bitwig), then restart the host if AETHR still doesn’t appear.
 
 ---
 
-## Install locations
+## Where it ends up
 
-### macOS
-
-Copy (or confirm) the bundles here:
-
-| Format | User folder (recommended) | System folder |
-|--------|---------------------------|---------------|
-| **VST3** | `~/Library/Audio/Plug-Ins/VST3/AETHR.vst3` | `/Library/Audio/Plug-Ins/VST3/` |
-| **AU** | `~/Library/Audio/Plug-Ins/Components/AETHR.component` | `/Library/Audio/Plug-Ins/Components/` |
-| **Standalone** | Anywhere (Applications is fine) | — |
-
-Tips:
-
-- In Finder, **Go → Go to Folder…** and paste `~/Library/Audio/Plug-Ins/`.
-- After installing, rescan plug-ins in your DAW (Ableton: Preferences → Plug-Ins → Rescan).
-- If the plug-in is missing after a rebuild on an iCloud Desktop, run:
-
-  ```bash
-  ./Tools/sanitise-macos-bundle.sh ~/Library/Audio/Plug-Ins/VST3/AETHR.vst3
-  ./Tools/sanitise-macos-bundle.sh ~/Library/Audio/Plug-Ins/Components/AETHR.component
-  ```
-
-### Windows
-
-| Format | Typical folder |
-|--------|----------------|
-| **VST3** | `C:\Program Files\Common Files\VST3\AETHR.vst3` |
-| **VST3** (user) | `%LOCALAPPDATA%\Programs\Common\VST3\AETHR.vst3` |
-| **Standalone** | Any folder you like (e.g. `C:\Program Files\ixmuk\AETHR\`) |
-
-Steps:
-
-1. Unzip `AETHR-Windows-VST3.zip` so you have a folder named `AETHR.vst3` (not nested zips of loose files).
-2. Copy that **entire folder** into your VST3 directory.
-3. In your DAW, add/rescan that VST3 path if it isn’t already listed.
-4. Restart the DAW if the plug-in doesn’t appear.
+| Platform | Format | Path |
+|----------|--------|------|
+| macOS | VST3 | `~/Library/Audio/Plug-Ins/VST3/AETHR.vst3` |
+| macOS | AU | `~/Library/Audio/Plug-Ins/Components/AETHR.component` |
+| macOS | Standalone | `~/Applications/AETHR.app` |
+| Windows | VST3 | `C:\Program Files\Common Files\VST3\AETHR.vst3` |
+| Windows | VST3 (user) | `%LOCALAPPDATA%\Programs\Common\VST3\AETHR.vst3` |
+| Windows | Standalone | `C:\Program Files\ixmuk\AETHR\AETHR.exe` |
 
 ---
 
-## First launch checklist
+## Get a CI build (optional)
 
-1. Create a MIDI track / instrument track and load **AETHR**.
-2. Send MIDI — footer should show note activity / voices.
-3. Start on **String** engine, then try **Bell**, **Plate**, **Granular**, **Hybrid**.
-4. Optional: enable **ARP** under the engine strip, hold a chord, toggle the 16 step gates.
-
-Company name in the UI footer: **IXMUK**.
+1. Open **[Actions](https://github.com/Soumen2581/AETHR/actions)**.
+2. Open the latest green **CI** run.
+3. Download **`AETHR-macOS`** or **`AETHR-Windows`**, then use the zip commands above.
 
 ---
 
-## DAW notes
+## First launch
 
-| Host | Tip |
-|------|-----|
-| **Ableton Live** | Rescan plug-ins; after updating AETHR, delete the device from the track and re-insert it. |
-| **Logic Pro** | AU only on Mac; run `auval -v aumu Aetr Ixmk` if validation fails. |
-| **FL Studio / Reaper / Cubase / Bitwig** | Use VST3; point the scanner at the VST3 folder above. |
+1. Load **AETHR** on a MIDI / instrument track.
+2. Send MIDI — the footer should show activity.
+3. Start on **String**, then try other engines; optional **ARP** under the engine strip.
 
-Manufacturer code: `Ixmk` · Plugin code: `Aetr` · Bundle ID: `com.ixmuk.aethr`
+Company in the UI: **IXMUK** · Codes: manufacturer `Ixmk`, plugin `Aetr`
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Fix |
-|---------|-----|
-| Plug-in not listed | Wrong folder; rescan; confirm 64-bit host. |
-| Loads then blank / old UI (macOS) | Remove + re-add device; sanitise bundle; clear Ableton’s plug-in cache if needed. |
-| Windows Defender blocks `.exe` | Allow the Standalone / VST3 from a trusted build (your CI or local compile). |
-| Build fails fetching JUCE | Check network / proxy; delete `External/JUCE` and reconfigure. |
-| “Codesign / quarantine” on Mac | Run `Tools/sanitise-macos-bundle.sh` on the installed bundle. |
+| Symptom | Terminal fix |
+|---------|----------------|
+| macOS quarantine / won’t load | `./Tools/sanitise-macos-bundle.sh ~/Library/Audio/Plug-Ins/VST3/AETHR.vst3` |
+| Old UI after rebuild (Ableton) | Re-run install commands, then remove + re-add the device |
+| Windows “Access denied” | Open Command Prompt **as Administrator**, or use the `%LOCALAPPDATA%` path |
+| Plug-in not listed | Confirm the path with `ls` / `dir`, then rescan the DAW |
+| Wrong Windows build folder | If you used `-B build\ci`, set `ART=build\ci\Aethr_artefacts\RelWithDebInfo` |
 
-More build detail: [`BUILD.md`](BUILD.md).
+More build options: [`BUILD.md`](BUILD.md).
