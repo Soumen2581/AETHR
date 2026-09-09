@@ -26,6 +26,16 @@ PRODUCT="${AETHR_PRODUCT_NAME:-AETHR}"
 COMPANY="${AETHR_COMPANY_NAME:-ixmuk}"
 BUNDLE_ID="${AETHR_BUNDLE_ID:-com.ixmuk.aethr}"
 
+# Strip accidental quotes from CMake -E env over-escaping.
+strip_quotes() { local v="$1"; v="${v#\"}"; v="${v%\"}"; printf '%s' "$v"; }
+ROOT="$(strip_quotes "${ROOT}")"
+ART="$(strip_quotes "${ART}")"
+DIST="$(strip_quotes "${DIST}")"
+VER="$(strip_quotes "${VER}")"
+PRODUCT="$(strip_quotes "${PRODUCT}")"
+COMPANY="$(strip_quotes "${COMPANY}")"
+BUNDLE_ID="$(strip_quotes "${BUNDLE_ID}")"
+
 APP="${ART}/Standalone/${PRODUCT}.app"
 VST3="${ART}/VST3/${PRODUCT}.vst3"
 AU="${ART}/AU/${PRODUCT}.component"
