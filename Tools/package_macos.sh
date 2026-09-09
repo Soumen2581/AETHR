@@ -1,46 +1,48 @@
 #!/usr/bin/env bash
 # Build a professional macOS installer DMG for AETHR.
 #
-# Required env (set by cmake/MacOSPackaging.cmake or CI):
-#   AETHR_VERSION, AETHR_PRODUCT_NAME, AETHR_COMPANY_NAME, AETHR_BUNDLE_ID
-#   AETHR_ARTEFACTS_DIR  e.g. build/release/Aethr_artefacts/Release
-#   AETHR_DIST_DIR       e.g. dist/macos
-#   AETHR_SOURCE_DIR     repo root
+# Usage (preferred — CMake target package-macos):
+#   Tools/package_macos.sh <version> <product> <company> <bundleId> <artefactsDir> <distDir> <sourceDir>
+#
+# Or via environment variables (manual runs).
 #
 # Optional signing / notarization (never committed):
-#   APPLE_DEVELOPER_ID   "Developer ID Application: Name (TEAMID)"
-#   APPLE_TEAM_ID
+#   APPLE_DEVELOPER_ID, APPLE_INSTALLER_ID, APPLE_TEAM_ID,
 #   APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD  OR  APPLE_API_KEY / APPLE_API_KEY_ID / APPLE_API_ISSUER
 #
 # Output:
-#   ${AETHR_DIST_DIR}/AETHR-${VERSION}-macOS.dmg
-#   ${AETHR_DIST_DIR}/AETHR-${VERSION}-macOS.pkg   (also inside the DMG)
+#   ${distDir}/AETHR-${version}-macOS.dmg
+#   ${distDir}/AETHR-${version}-macOS.pkg
 #
 set -euo pipefail
 
-ROOT="${AETHR_SOURCE_DIR:?AETHR_SOURCE_DIR required}"
-ART="${AETHR_ARTEFACTS_DIR:?AETHR_ARTEFACTS_DIR required}"
-DIST="${AETHR_DIST_DIR:?AETHR_DIST_DIR required}"
-VER="${AETHR_VERSION:?AETHR_VERSION required}"
-PRODUCT="${AETHR_PRODUCT_NAME:-AETHR}"
-COMPANY="${AETHR_COMPANY_NAME:-ixmuk}"
-BUNDLE_ID="${AETHR_BUNDLE_ID:-com.ixmuk.aethr}"
-
-# Strip accidental quotes from CMake -E env over-escaping.
 strip_quotes() { local v="$1"; v="${v#\"}"; v="${v%\"}"; printf '%s' "$v"; }
-ROOT="$(strip_quotes "${ROOT}")"
-ART="$(strip_quotes "${ART}")"
-DIST="$(strip_quotes "${DIST}")"
-VER="$(strip_quotes "${VER}")"
-PRODUCT="$(strip_quotes "${PRODUCT}")"
-COMPANY="$(strip_quotes "${COMPANY}")"
-BUNDLE_ID="$(strip_quotes "${BUNDLE_ID}")"
+
+if [[ $# -ge 7 ]]; then
+  VER="$(strip_quotes "$1")"
+  PRODUCT="$(strip_quotes "$2")"
+  COMPANY="$(strip_quotes "$3")"
+  BUNDLE_ID="$(strip_quotes "$4")"
+  ART="$(strip_quotes "$5")"
+  DIST="$(strip_quotes "$6")"
+  ROOT="$(strip_quotes "$7")"
+else
+  ROOT="$(strip_quotes "${AETHR_SOURCE_DIR:?AETHR_SOURCE_DIR required (or pass 7 CLI args)}")"
+  ART="$(strip_quotes "${AETHR_ARTEFACTS_DIR:?AETHR_ARTEFACTS_DIR required}")"
+  DIST="$(strip_quotes "${AETHR_DIST_DIR:?AETHR_DIST_DIR required}")"
+  VER="$(strip_quotes "${AETHR_VERSION:?AETHR_VERSION required}")"
+  PRODUCT="$(strip_quotes "${AETHR_PRODUCT_NAME:-AETHR}")"
+  COMPANY="$(strip_quotes "${AETHR_COMPANY_NAME:-ixmuk}")"
+  BUNDLE_ID="$(strip_quotes "${AETHR_BUNDLE_ID:-com.ixmuk.aethr}")"
+fi
 
 APP="${ART}/Standalone/${PRODUCT}.app"
 VST3="${ART}/VST3/${PRODUCT}.vst3"
 AU="${ART}/AU/${PRODUCT}.component"
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
+
+echo "package_macos: VER=${VER} PRODUCT=${PRODUCT} ART=${ART}"
 
 [[ -d "${APP}" ]]  || fail "missing Standalone: ${APP}"
 [[ -d "${VST3}" ]] || fail "missing VST3: ${VST3}"
