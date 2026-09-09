@@ -4,18 +4,48 @@
 [![Release](https://github.com/Soumen2581/AETHR/actions/workflows/release.yml/badge.svg)](https://github.com/Soumen2581/AETHR/actions/workflows/release.yml)
 
 A polyphonic physical-modelling instrument by **ixmuk**.
-Formats:
 
 | Platform | Formats |
 |----------|---------|
 | **macOS** | VST3, Audio Unit, Standalone |
 | **Windows** | VST3, Standalone |
 
-Company: **ixmuk**. CI builds and tests both platforms on every push
-([docs/CI.md](docs/CI.md)).
+![AETHR editor — String engine, Init preset](docs/images/aethr-editor.png)
 
-**Install:** end users — **[docs/INSTALLATION.md](docs/INSTALLATION.md)** (DMG / EXE).
-Developers / CI zips — **[docs/INSTALL.md](docs/INSTALL.md)**.
+## Download & install (v0.95.0)
+
+**Release page:** [github.com/Soumen2581/AETHR/releases/tag/v0.95.0](https://github.com/Soumen2581/AETHR/releases/tag/v0.95.0)
+
+| Platform | Download installer | Install |
+|----------|--------------------|---------|
+| **macOS** | [**AETHR-0.95.0-macOS.dmg**](https://github.com/Soumen2581/AETHR/releases/download/v0.95.0/AETHR-0.95.0-macOS.dmg) | Open the DMG → double-click **Install AETHR.pkg** → enter password → rescan plugins in your DAW |
+| **Windows** | [**AETHR-0.95.0-Windows.exe**](https://github.com/Soumen2581/AETHR/releases/download/v0.95.0/AETHR-0.95.0-Windows.exe) | Run the EXE (admin) → finish the wizard → rescan VST3 in your DAW |
+| Checksums | [AETHR-0.95.0-SHA256SUMS.txt](https://github.com/Soumen2581/AETHR/releases/download/v0.95.0/AETHR-0.95.0-SHA256SUMS.txt) | `shasum -a 256 -c AETHR-0.95.0-SHA256SUMS.txt` |
+
+### What gets installed
+
+**macOS**
+
+| Component | Location |
+|-----------|----------|
+| Standalone | `/Applications/AETHR.app` |
+| VST3 | `/Library/Audio/Plug-Ins/VST3/AETHR.vst3` |
+| Audio Unit | `/Library/Audio/Plug-Ins/Components/AETHR.component` |
+
+If Gatekeeper blocks the unsigned pkg: right-click → **Open**.
+
+**Windows**
+
+| Component | Location |
+|-----------|----------|
+| Standalone | `%ProgramFiles%\AETHR\AETHR.exe` |
+| VST3 | `%CommonProgramFiles%\VST3\AETHR.vst3\` |
+
+If SmartScreen warns: **More info → Run anyway**.
+
+Full guide: [`docs/INSTALLATION.md`](docs/INSTALLATION.md). Developers building from source: [`docs/INSTALL.md`](docs/INSTALL.md).
+
+---
 
 AETHR is an experimental synthesis lab: thirteen selectable engines in one chassis —
 physical (string through cavity), synthetic (waveguide / modal / spectral), and
@@ -26,7 +56,8 @@ See [`docs/ENGINE_REFERENCE.md`](docs/ENGINE_REFERENCE.md) for what each engine
 actually does (character models on two cores, not thirteen unrelated physics
 simulators).
 
-![AETHR editor — String engine](docs/images/aethr-editor.jpg)
+Company: **ixmuk**. CI builds and tests both platforms on every push
+([docs/CI.md](docs/CI.md)).
 
 ## Repository layout
 
@@ -73,11 +104,11 @@ clean settings). Other engines are distinct character models — see
 
 | Document | Contents |
 |----------|----------|
-| **[INSTALL.md](docs/INSTALL.md)** | **How to install on macOS and Windows (dev / CI zips)** |
-| **[INSTALLATION.md](docs/INSTALLATION.md)** | **End-user DMG / EXE installers** |
-| **[PACKAGING.md](docs/PACKAGING.md)** | **How installers are built** |
-| **[CI.md](docs/CI.md)** | **GitHub Actions, local≈CI, releases, artefacts** |
-| **[RELEASE.md](docs/RELEASE.md)** | **0.95 feature freeze + RC checklist** |
+| **[INSTALLATION.md](docs/INSTALLATION.md)** | **End-user DMG / EXE install** |
+| **[INSTALL.md](docs/INSTALL.md)** | Dev / CI zip install paths |
+| **[PACKAGING.md](docs/PACKAGING.md)** | How installers are built |
+| **[CI.md](docs/CI.md)** | GitHub Actions, local≈CI, releases |
+| **[RELEASE.md](docs/RELEASE.md)** | 0.95 feature freeze + RC checklist |
 | **[FINAL_POLISH_AUDIT.md](docs/FINAL_POLISH_AUDIT.md)** | Final polish issue ranking |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Toolchain, signal flow, threading, parameters |
 | [DSP_ARCHITECTURE.md](docs/DSP_ARCHITECTURE.md) | Multi-engine contract and realtime rules |

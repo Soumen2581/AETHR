@@ -1,11 +1,12 @@
 # AETHR — Installation
 
-Product packages (primary):
+**Current release:** [v0.95.0](https://github.com/Soumen2581/AETHR/releases/tag/v0.95.0)
 
-| Platform | File |
-|----------|------|
-| macOS | `AETHR-<version>-macOS.dmg` |
-| Windows | `AETHR-<version>-Windows.exe` |
+| Platform | Direct download |
+|----------|-----------------|
+| macOS | [AETHR-0.95.0-macOS.dmg](https://github.com/Soumen2581/AETHR/releases/download/v0.95.0/AETHR-0.95.0-macOS.dmg) |
+| Windows | [AETHR-0.95.0-Windows.exe](https://github.com/Soumen2581/AETHR/releases/download/v0.95.0/AETHR-0.95.0-Windows.exe) |
+| Checksums | [AETHR-0.95.0-SHA256SUMS.txt](https://github.com/Soumen2581/AETHR/releases/download/v0.95.0/AETHR-0.95.0-SHA256SUMS.txt) |
 
 Version always matches `project(AETHR VERSION …)` in `CMakeLists.txt`.
 
@@ -15,7 +16,7 @@ Version always matches `project(AETHR VERSION …)` in `CMakeLists.txt`.
 
 ### Install
 
-1. Download `AETHR-x.x.x-macOS.dmg`
+1. Download [AETHR-0.95.0-macOS.dmg](https://github.com/Soumen2581/AETHR/releases/download/v0.95.0/AETHR-0.95.0-macOS.dmg)
 2. Open the DMG
 3. Double-click **Install AETHR.pkg**
 4. Authenticate when prompted
@@ -51,7 +52,7 @@ User presets are **not** under those paths — see [User data](#user-data).
 
 ### Install
 
-1. Download `AETHR-x.x.x-Windows.exe`
+1. Download [AETHR-0.95.0-Windows.exe](https://github.com/Soumen2581/AETHR/releases/download/v0.95.0/AETHR-0.95.0-Windows.exe)
 2. Run the installer (admin elevation required for system VST3)
 3. Optionally create a Desktop shortcut
 4. Rescan VST3 plugins in your DAW
